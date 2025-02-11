@@ -1,21 +1,42 @@
 from game import Game;
-import signal;
 
-# Start the game
-game = Game();
+import curses;
+from curses import wrapper;
 
-# Ask questions until the game is over
-while game.game_over == False:
-    try:
-        game.ask_question();
+# Initialize the screen
+stdscr = curses.initscr();
 
-    # Handle keyboard interrupts
-    except KeyboardInterrupt:
+# Enable echoing of keys
+curses.echo();
 
-        # Try to end the game normally
+# Enable reading of keys without pressing enter
+curses.cbreak();
+
+# Enable keypad mode
+stdscr.keypad(True);
+
+"""
+Main function
+"""
+def main(stdscr):
+    # Start the game
+    game = Game(stdscr);
+    
+    # Ask questions until the game is over
+    while game.game_over == False:
         try:
-            game.end_game();
-
-        # If user interrupts again, force the game to end
+            game.ask_question();
+    
+        # Handle keyboard interrupts
         except KeyboardInterrupt:
-            game.end_game(offer_restart=False);
+    
+            # Try to end the game normally
+            try:
+                game.end_game();
+    
+            # If user interrupts again, force the game to end
+            except KeyboardInterrupt:
+                game.end_game(offer_restart=False);
+
+# Run the main function
+wrapper(main);

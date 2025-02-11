@@ -5,40 +5,61 @@ import sys;
 
 import time;
 
+import curses;
+
 """
 Class to represent a game
 """
 class Game:
     """
     Constructor
+    @param stdscr: Instance of curses stdscr
     """
-    def __init__(self):
+    def __init__(self, stdscr):
+        # Set the instance of curses stdscr
+        self.stdscr = stdscr;
+        
+        # Initialise high score
+        self.best_score = 0;
+        self.best_score_name = "";
+
         # Initialise game state
         self.reset();
-        self.best_score = 0;
-
+        
         # Get list of questions
         self.questions = Questions();
-             
+
+    """
+    Display a welcome message and ask user for info (i.e their name)
+    """
+    def show_welcome_form(self):
         # Display welcome message
         # TODO replace with real student ID
         student_id = 0;
         welcome_message = f"Quizzical, produced by {student_id} for assessment 1 of CS5003";
-        print(welcome_message);
+        self.stdscr.addstr(0, 0, welcome_message, curses.A_BOLD);
+        
+        # Ask the user for their name
+        self.stdscr.addstr(1, 0, "Welcome to Quizzical! Please enter your name: ");
+
+        self.stdscr.refresh();
+
+        # Get the user's name
+        self.user_name = self.stdscr.getstr().decode('utf-8');
 
     """
     Ask a question to the user, and handle the user's answer
     """
     def ask_question(self):
+        # Wipe the screen
+        self.stdscr.clear();
+        
         # Get a question 
         question = self.get_question();
-
+        
         # Show the question to the user
-        print(question.question);
-   
-        # Display multiple choices
-        print(question.choices_string);    
-    
+        self.show_question(question);
+
         # Start the timer
         self.start_timer();
 
@@ -54,33 +75,52 @@ class Game:
         # Stop the timer
         self.stop_timer();
 
+    
     """  
     Ask the user for a difficulty level and get a question
     """
     def get_question(self):
         # Ask user for a difficulty 
-        requested_difficulty_level = input("Pick a random difficulty (0), or choose the difficulty level of the question you would like to answer (1: easy, 2: medium, 3: hard) ");
+        self.stdscr.addstr(0, 0, "Please enter a difficulty level (0 for random, 1 for easy, 2 for medium, 3 for hard): ");
+        self.stdscr.refresh();
+        requested_difficulty_level = self.stdscr.getstr().decode('utf-8');
 
         # If difficulty unspecified, ask a random question
         if requested_difficulty_level == "0":
-            print("No difficulty specified. Asking a random question.");
-
             question = self.questions.get_random_question();
         
         # If difficulty specified, ask a question of that difficulty
         elif requested_difficulty_level in ["1", "2", "3"]:
-            print(f"Difficulty level {requested_difficulty_level} specified. Asking a question of that difficulty.");
-
-            question = self.questions.get_filtered_question(
-                {"difficulty_score": int(requested_difficulty_level)}
-            );
+            question = self.questions.get_filtered_question({
+                "difficulty_score": int(requested_difficulty_level)
+            });
 
         # If difficulty is invalid, reask the question
         else:
-            print("Invalid difficulty level. Must be 0, 1, 2 or 3.");
+            # Display an error message
+            self.stdscr.addstr(1, 0, "Invalid difficulty level! Please enter a number between 0 and 3.");
+            self.stdscr.refresh();
+            
+            # Ask the user for a difficulty level again
             self.get_question();
     
         return question;
+    
+    """
+    Show a question to the user
+    @param question: Question object
+    """
+    def show_question(self, question):
+        # Show the user's name and score, and the best score and name
+        self.game_info = f"Name: {self.user_name} | Incorrect answers: {self.incorrect_answers} | Total time elapsed: {self.total_time}s | Score: {self.score} | High score: {self.best_score} (held by {self.best_score_name})"; 
+
+        self.stdscr.addstr(0, 0, self.game_info, curses.A_BOLD);
+        
+        # Display the question
+        self.stdscr.addstr(1, 0, question.question, curses.A_BOLD);
+   
+        # Display multiple choices
+        self.stdscr.addstr(2, 0, question.choices_string);
 
     """
     Get an answer    
@@ -89,11 +129,14 @@ class Game:
     """
     def get_answer(self, question):
         # Ask the user for an answer
-        answer = input(f"Enter your answer {question.valid_answers_string} or press 'a' to play a chip: ");
-        
+        self.stdscr.addstr(3, 0, f"Enter your answer {question.valid_answers_string} or press 'a' to play a chip: ");
+        self.stdscr.refresh(); 
+
+        # Get the user's answer
+        answer = self.stdscr.getstr().decode('utf-8');
+
         # Check if the user has requested a chip
         if answer == "a":
-
             # Play a chip
             self.play_chip(question);
 
@@ -104,7 +147,8 @@ class Game:
         if answer not in question.valid_answers:
 
             # Display an error message
-            print(f"Invalid answer! Please enter a number between {question.min_answer} and {question.max_answer}.");
+            self.stdscr.addstr(4, 0, "Invalid answer! Please enter a valid answer.");
+            self.stdscr.refresh();
 
             # Ask the user for an answer again
             answer = self.get_answer(question);
@@ -129,22 +173,32 @@ class Game:
         self.time_taken = self.end_time - self.start_time;
 
         # Add time taken to total time
-        self.total_time += self.time_taken; 
+        self.total_time += self.time_taken;
+
     """
     Play a chip
     @param question: Question object
     """
     def play_chip(self, question):
-        chips = ["50/50", "quit"];
-        chip = input(f"Enter the chip you would like to play ({', '.join(chips)}): ");
+        # Ask the user for the name of the chip they would like to play
+        stdscr.move(4, 0);
+        stdscr.clrtoeol();
+        self.stdscr.addstr(4, 0, "Please enter the name of the chip you would like to play (50/50, quit): ");
+        self.stdscr.refresh();
+
+        # Get the name of the chip the user would like to play
+        chip = self.stdscr.getstr().decode('utf-8');
 
         # Check if the chip has already been played
         if chip in self.chips_played:
-            print("You have already played that chip!");
+
+            # Display an error message
+            self.stdscr.addstr(5, 0, "You have already played this chip during this game! Please enter a different chip."); 
+            self.stdscr.refresh();
+
             return;
 
         if chip == "50/50":
-
             # Check if the question can play 50/50
             if question.can_fifty_fifty():
 
@@ -155,26 +209,45 @@ class Game:
                 question.fifty_fifty();
 
                 # Display the question again, with the 50/50 options
-                print(question.question);
-
-                print(question.choices_string);
+                self.show_question(question);
 
             else:
-                print("Cannot play 50/50 on this question!");
+                # Display an error message
+                self.stdscr.addstr(5, 0, "You cannot use the 50/50 chip on this question! Please enter a different chip.");
+                self.stdscr.refresh();
 
                 # Ask user to play a different chip
                 play_chip(question);
        
         # Quit the chip menu and return to the question
         elif chip == "quit":
-            return;
+            ();
 
         # Invalid chip
         else:
-            print("Invalid chip! ");
+            # Display an error message
+            self.stdscr.addstr(5, 0, "Invalid chip! Please enter a valid chip.");
+            self.stdscr.refresh();
 
             # Ask user to play a different chip
             play_chip(question);
+        
+        # Clear chip messages after playing a chip
+        self.clear_chip_messages(); 
+
+    """
+    Clear chip messages
+    """
+    def clear_chip_messages(self):
+        # Clear chip prompt
+        self.stdscr.move(4, 0);
+        self.stdscr.clrtoeol();
+
+        # Clear any error messages
+        self.stdscr.move(5, 0);
+        self.stdscr.clrtoeol();
+        
+        self.stdscr.refresh();
 
     """
     User answered correctly
@@ -186,9 +259,11 @@ class Game:
         
         # Increment score
         self.score += difficulty_score
+
         # Display a message
-        print(f"Correct! You Your current score is {self.score} (best score: {self.best_score}).");
-    
+        self.stdscr.addstr(4, 0, f"Correct!");
+        self.stdscr.refresh();
+
     """
     User answered incorrectly
     """
@@ -197,8 +272,9 @@ class Game:
         self.incorrect_answers += 1;
     
         # Display a message
-        print(f"Incorrect! The correct answer is {correct_answer}. Your current score is {self.score} (best score: {self.best_score}).");
-        
+        self.stdscr.addstr(4, 0, f"Incorrect! The correct answer was {correct_answer}."); 
+        self.stdscr.refresh();
+
         # Check if the game is over
         self.check_game_over();
     
@@ -212,16 +288,9 @@ class Game:
     
         # Check if user has reached the maximum number of incorrect answers
         if self.incorrect_answers == max_incorrect_answers:
-            print("Game over!");
+            # End the game 
             self.end_game(); 
     
-    """
-    Handle player exit via keyboard interrupt
-    """
-    def player_exit(self, sig, frame):
-        print("Goodbye!"); 
-        self.end_game(offer_restart = False);
-
     """
     End the game
     @param offer_restart: Whether to offer to restart the game  
@@ -235,19 +304,25 @@ class Game:
         self.stop_timer();
 
         # Display the user's score
-        print(f"Your score was {self.score}. You spent {self.total_time} seconds playing the game.");
-       
+        self.stdscr.clear();
+
+        self.stdscr.addstr(0, 0, "Game over!", curses.A_BOLD);
+        self.stdscr.addstr(1, 0, f"Your score was {self.score}. You spent {self.total_time} seconds playing the game.");
+
         # Check if the user has a new high score
         if self.score > self.best_score:
             # Update the high score
             self.best_score = self.score;
+            self.best_score_name = self.user_name
 
             # Display a message congratulating the user
-            print(f"Congratulations! You have a new high score.");
+            self.stdscr.addstr(3, 0, f"Congratulations! You have achieved the new high score!", curses.A_BOLD);
 
         # Offer to reset the game if appropriate
         if offer_restart:
-            user_restart = input("Would you like to play again? (y/n): ");
+            self.stdscr.addstr(2, 0, "Would you like to play again? (y/n): ");
+            self.stdscr.refresh();
+            user_restart = self.stdscr.getstr().decode('utf-8');
 
             if user_restart == "y":
                 self.reset();
@@ -269,3 +344,7 @@ class Game:
         self.end_time = 0;
         self.time_taken = 0;
         self.total_time = 0;
+
+        # Show the welcome form to the user
+        self.show_welcome_form(); 
+
