@@ -3,6 +3,8 @@ from question import Question;
 
 import sys;
 
+import time;
+
 """
 Class to represent a game
 """
@@ -30,21 +32,27 @@ class Game:
     def ask_question(self):
         # Get a question 
         question = self.get_question();
-        print(question);
 
         # Show the question to the user
         print(question.question);
-    
+   
         # Display multiple choices
         print(question.choices_string);    
     
+        # Start the timer
+        self.start_timer();
+
         # Wait for the user's answer
         answer = self.get_answer(question);            
-
+        
+        # Check the user's answer
         if question.check_answer(answer):
             self.user_correct(question.difficulty_score);
         else:
             self.user_incorrect(question.correct_answer); 
+        
+        # Stop the timer
+        self.stop_timer();
 
     """  
     Ask the user for a difficulty level and get a question
@@ -102,7 +110,26 @@ class Game:
             answer = self.get_answer(question);
 
         return answer;
+    
+    """
+    Start the timer
+    """
+    def start_timer(self):
+        # Record current time as start
+        self.start_time = time.time();
 
+    """
+    Stop the timer
+    """
+    def stop_timer(self):
+        # Record current time as end
+        self.end_time = time.time();
+        
+        # Calculate time taken
+        self.time_taken = self.end_time - self.start_time;
+
+        # Add time taken to total time
+        self.total_time += self.time_taken; 
     """
     Play a chip
     @param question: Question object
@@ -160,7 +187,7 @@ class Game:
         # Increment score
         self.score += difficulty_score
         # Display a message
-        print(f"Correct! Your current score is {self.score} (best score: {self.best_score}).");
+        print(f"Correct! You Your current score is {self.score} (best score: {self.best_score}).");
     
     """
     User answered incorrectly
@@ -203,9 +230,12 @@ class Game:
         offer_restart = True
     ):
         self.game_over = True;
+        
+        # Stop timer
+        self.stop_timer();
 
         # Display the user's score
-        print(f"Your score was {self.score}.");
+        print(f"Your score was {self.score}. You spent {self.total_time} seconds playing the game.");
        
         # Check if the user has a new high score
         if self.score > self.best_score:
@@ -227,8 +257,15 @@ class Game:
     """
     def reset(self):
         # Reset the game
+        self.game_over = False;
+
         self.correct_answers = 0;
         self.incorrect_answers = 0;
-        self.game_over = False;
         self.score = 0;
+
         self.chips_played = [];
+
+        self.start_time = 0;
+        self.end_time = 0;
+        self.time_taken = 0;
+        self.total_time = 0;
