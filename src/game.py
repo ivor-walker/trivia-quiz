@@ -51,9 +51,7 @@ class Game:
     Ask a question to the user, and handle the user's answer
     """
     def ask_question(self):
-        # Wipe the screen
-        self.stdscr.clear();
-        
+                
         # Get a question 
         question = self.get_question();
         
@@ -81,8 +79,9 @@ class Game:
     """
     def get_question(self):
         # Ask user for a difficulty 
-        self.stdscr.addstr(0, 0, "Please enter a difficulty level (0 for random, 1 for easy, 2 for medium, 3 for hard): ");
+        self.stdscr.addstr(1, 0, "Please enter a difficulty level (0 for random, 1 for easy, 2 for medium, 3 for hard): ", curses.A_BOLD);
         self.stdscr.refresh();
+
         requested_difficulty_level = self.stdscr.getstr().decode('utf-8');
 
         # If difficulty unspecified, ask a random question
@@ -98,12 +97,15 @@ class Game:
         # If difficulty is invalid, reask the question
         else:
             # Display an error message
-            self.stdscr.addstr(1, 0, "Invalid difficulty level! Please enter a number between 0 and 3.");
+            self.stdscr.addstr(2, 0, "Invalid difficulty level! Please enter a number between 0 and 3.");
             self.stdscr.refresh();
             
             # Ask the user for a difficulty level again
             self.get_question();
-    
+        
+        # Wipe the screen
+        self.stdscr.clear();
+
         return question;
     
     """
@@ -114,13 +116,13 @@ class Game:
         # Show the user's name and score, and the best score and name
         self.game_info = f"Name: {self.user_name} | Incorrect answers: {self.incorrect_answers} | Total time elapsed: {self.total_time}s | Score: {self.score} | High score: {self.best_score} (held by {self.best_score_name})"; 
 
-        self.stdscr.addstr(0, 0, self.game_info, curses.A_BOLD);
+        self.stdscr.addstr(0, 0, self.game_info);
         
         # Display the question
-        self.stdscr.addstr(1, 0, question.question, curses.A_BOLD);
+        self.stdscr.addstr(2, 0, question.question);
    
         # Display multiple choices
-        self.stdscr.addstr(2, 0, question.choices_string);
+        self.stdscr.addstr(3, 0, question.choices_string);
 
     """
     Get an answer    
@@ -129,7 +131,7 @@ class Game:
     """
     def get_answer(self, question):
         # Ask the user for an answer
-        self.stdscr.addstr(3, 0, f"Enter your answer {question.valid_answers_string} or press 'a' to play a chip: ");
+        self.stdscr.addstr(1, 0, f"Enter your answer {question.valid_answers_string} or press 'a' to play a chip: ", curses.A_BOLD);
         self.stdscr.refresh(); 
 
         # Get the user's answer
@@ -259,10 +261,12 @@ class Game:
         
         # Increment score
         self.score += difficulty_score
+        
+        # Wipe the screen
+        self.stdscr.clear();
 
         # Display a message
-        self.stdscr.addstr(4, 0, f"Correct!");
-        self.stdscr.refresh();
+        self.stdscr.addstr(0, 0, f"Correct!");
 
     """
     User answered incorrectly
@@ -270,10 +274,12 @@ class Game:
     def user_incorrect(self, correct_answer):
         # Increment the number of incorrect answers
         self.incorrect_answers += 1;
-    
+     
+        # Wipe the screen 
+        self.stdscr.clear();
+
         # Display a message
-        self.stdscr.addstr(4, 0, f"Incorrect! The correct answer was {correct_answer}."); 
-        self.stdscr.refresh();
+        self.stdscr.addstr(0, 0, f"Incorrect! The correct answer was {correct_answer}."); 
 
         # Check if the game is over
         self.check_game_over();
@@ -326,6 +332,8 @@ class Game:
 
             if user_restart == "y":
                 self.reset();
+        
+        # Exit screen
 
     """
     Restart the game

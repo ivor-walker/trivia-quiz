@@ -38,5 +38,8 @@ def main(stdscr):
             except KeyboardInterrupt:
                 game.end_game(offer_restart=False);
 
+    # Reset the screen
+    curses.endwin();
+
 # Run the main function
 wrapper(main);

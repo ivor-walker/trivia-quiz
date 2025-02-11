@@ -41,7 +41,6 @@ class Questions:
         n_to_fetch = 50,
         rate_limit = 5,
     ):
-        print("Fetching questions...");
 
         # Fetch questions from API
         response = requests.get(f"https://opentdb.com/api.php?amount={n_to_fetch}&token={self.token}");
@@ -63,7 +62,6 @@ class Questions:
 
         # Code 5: rate limit exceeded
         if response_code == 5:
-            print("Rate limit exceeded. Waiting " + str(rate_limit) + " seconds...");
             # Wait and try again
             time.sleep(rate_limit);
             return self.fetch_new_questions();
