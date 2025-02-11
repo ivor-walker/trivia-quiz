@@ -11,14 +11,13 @@ class Game:
     Constructor
     """
     def __init__(self):
-        # Get list of questions
-        self.questions = Questions();
-        
+        # Initialise game state
+        self.reset();
         self.best_score = 0;
 
-        # Initialise game state
-        self.reset_game();
-     
+        # Get list of questions
+        self.questions = Questions();
+             
         # Display welcome message
         # TODO replace with real student ID
         student_id = 0;
@@ -26,24 +25,12 @@ class Game:
         print(welcome_message);
 
     """
-    Ask a question to the user
+    Ask a question to the user, and handle the user's answer
     """
     def ask_question(self):
-        # Ask user for a difficulty 
-        requested_difficulty_level = input("Pick a random difficulty (0), or choose the difficulty level of the question you would like to answer (1: easy, 2: medium, 3: hard) ");
-
-        # If difficulty unspecified, ask a random question
-        if requested_difficulty_level == "0":
-            question = self.questions.get_random_question();
-        
-        # If difficulty specified, ask a question of that difficulty
-        elif requested_difficulty_level in ["1", "2", "3"]:
-            question = self.questions.get_filtered_question(["difficulty_level": requested_difficulty_level]);
-
-        # If difficulty is invalid, reask the question
-        else:
-            print("Invalid difficulty level. Must be 0, 1, 2 or 3.");
-            ask_question();
+        # Get a question 
+        question = self.get_question();
+        print(question);
 
         # Show the question to the user
         print(question.question);
@@ -52,37 +39,69 @@ class Game:
         print(question.choices_string);    
     
         # Wait for the user's answer
-        correct = None;
+        answer = self.get_answer(question);            
 
-        while True:
-            answer = input("Enter your answer (1,2,3,4) or press 'a' to play a chip. ");
-            
-            try:
-                # If user wants to play a chip
-                if answer == "a":
-                    self.play_chip(question);
-                
-                # Else, attempt to check the answer
-                else:
-                    correct = question.check_answer(answer);
-
-            # If check_answer throws an exception, the answer is invalid
-            except Exception as e:
-                # Tell the user the answer is invalid 
-                print("Invalid answer. Must be 1, 2, 3, 4 or a.");
-                
-                # Ask the user to try again
-                continue;
-            
-            break;
-
-        # Check if the answer is correct
-        if correct:
+        if question.check_answer(answer):
             self.user_correct(question.difficulty_score);
         else:
             self.user_incorrect(question.correct_answer); 
+
+    """  
+    Ask the user for a difficulty level and get a question
+    """
+    def get_question(self):
+        # Ask user for a difficulty 
+        requested_difficulty_level = input("Pick a random difficulty (0), or choose the difficulty level of the question you would like to answer (1: easy, 2: medium, 3: hard) ");
+
+        # If difficulty unspecified, ask a random question
+        if requested_difficulty_level == "0":
+            print("No difficulty specified. Asking a random question.");
+
+            question = self.questions.get_random_question();
+        
+        # If difficulty specified, ask a question of that difficulty
+        elif requested_difficulty_level in ["1", "2", "3"]:
+            print(f"Difficulty level {requested_difficulty_level} specified. Asking a question of that difficulty.");
+
+            question = self.questions.get_filtered_question(
+                {"difficulty_score": int(requested_difficulty_level)}
+            );
+
+        # If difficulty is invalid, reask the question
+        else:
+            print("Invalid difficulty level. Must be 0, 1, 2 or 3.");
+            self.get_question();
     
-        print("\n");
+        return question;
+
+    """
+    Get an answer    
+    @param question: Question object
+    @return: User's answer
+    """
+    def get_answer(self, question):
+        # Ask the user for an answer
+        answer = input(f"Enter your answer {question.valid_answers_string} or press 'a' to play a chip: ");
+        
+        # Check if the user has requested a chip
+        if answer == "a":
+
+            # Play a chip
+            self.play_chip(question);
+
+            # Ask the user for an answer again
+            answer = self.get_answer(question);
+
+        # Check if the answer is valid
+        if answer not in question.valid_answers:
+
+            # Display an error message
+            print(f"Invalid answer! Please enter a number between {question.min_answer} and {question.max_answer}.");
+
+            # Ask the user for an answer again
+            answer = self.get_answer(question);
+
+        return answer;
 
     """
     Play a chip
@@ -108,15 +127,22 @@ class Game:
                 # Play the 50/50 chip
                 question.fifty_fifty();
 
+                # Display the question again, with the 50/50 options
+                print(question.question);
+
+                print(question.choices_string);
+
             else:
                 print("Cannot play 50/50 on this question!");
 
                 # Ask user to play a different chip
                 play_chip(question);
-        
+       
+        # Quit the chip menu and return to the question
         elif chip == "quit":
             return;
 
+        # Invalid chip
         else:
             print("Invalid chip! ");
 

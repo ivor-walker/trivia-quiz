@@ -41,9 +41,10 @@ class Questions:
         n_to_fetch = 50,
         rate_limit = 5,
     ):
+        print("Fetching questions...");
 
         # Fetch questions from API
-        response = requests.get("https://opentdb.com/api.php?amount=" + str(n_to_fetch) + "&token=" + self.token);
+        response = requests.get(f"https://opentdb.com/api.php?amount={n_to_fetch}&token={self.token}");
 
         # Parse JSON response
         data = response.json();
@@ -62,14 +63,14 @@ class Questions:
 
         # Code 5: rate limit exceeded
         if response_code == 5:
-
+            print("Rate limit exceeded. Waiting " + str(rate_limit) + " seconds...");
             # Wait and try again
             time.sleep(rate_limit);
             return self.fetch_new_questions();
 
         # Other codes: error
         if response_code != 0:
-            raise Exception("Error fetching questions from API: error code " + str(response_code));
+            raise Exception(f"Error fetching questions from API: error code {response_code}");
 
         # Get questions from response
         data = data["results"];
@@ -129,7 +130,8 @@ class Questions:
     """
     def get_filtered_question(self, search_dict):
         # Get all questions that match the search criteria
-        questions = [x for x in self.questions if all(item in x.__dict__.items() for item in search_dict.items())];
+        search_dict = search_dict.items();
+        questions = [x for x in self.questions if all(getattr(x, key) == value for key, value in search_dict)];
 
         # If no questions match, fetch new questions and try again
         if len(questions) == 0:

@@ -8,6 +8,7 @@ class Question:
     """
     Constructor for the Question class
     """
+    # TODO too long, refactor
     def __init__(self, question):
         self.question = question.get("question");
         self.category = question.get("category");
@@ -41,6 +42,16 @@ class Question:
         # Store number of choices and user-friendly representation of them
         self.num_choices = len(self.choices);
         self.choices_string = self.get_choices_string();
+        
+        # Calculate valid choices (i.e which numbers the user can input)
+        self.valid_answers = [str(i+1) for i in range(self.num_choices)];
+       
+        # Get user friendly representation of the valid answers
+        self.valid_answers_string = ", ".join(self.valid_answers);
+
+        # Set the minimum and maximum answer
+        self.min_answer = str(min(self.valid_answers));
+        self.max_answer = str(max(self.valid_answers));
 
     """
     Helper method to set the difficulty score of the question
