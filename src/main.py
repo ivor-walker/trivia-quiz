@@ -1,6 +1,9 @@
 from questions import Questions;
 from question import Question;
 
+import signal;
+import sys;
+
 """
 Ask a question to the user
 """
@@ -61,15 +64,28 @@ Handle game over
 def check_game_over(
         max_incorrect_answers = 3
     ):
+
     # Make counter variables global
     global correct_answers;
     global incorrect_answers;
 
-    # Check if user has exceeded the maximum number of incorrect answers
-    if incorrect_answers >= max_incorrect_answers:
-        print("Game over! You have answered " + str(incorrect_answers) + " questions incorrectly.");
-        print("You have answered " + str(correct_answers) + " questions correctly.");
-        exit();
+    # Check if user has reached the maximum number of incorrect answers
+    if incorrect_answers == max_incorrect_answers:
+        print(f"""
+        Game over! You answered {correct_answers} questions correctly.
+        """);
+        sys.exit(0);
+
+"""
+Handle player exit
+"""
+def exit(sig, frame):
+    print(f"""
+        Goodbye! You answered {correct_answers} questions correctly and {incorrect_answers} questions incorrectly.
+    """);
+    sys.exit(0);
+
+signal.signal(signal.SIGINT, exit);
 
 # Get questions
 questions = Questions();
