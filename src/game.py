@@ -11,59 +11,140 @@ class Game:
     Constructor
     """
     def __init__(self):
+        # Get list of questions
         self.questions = Questions();
-        self.correct_answers = 0;
-        self.incorrect_answers = 0;
-        self.game_over = False;
-      
+        
+        self.best_score = 0;
+
+        # Initialise game state
+        self.reset_game();
+     
+        # Display welcome message
         # TODO replace with real student ID
         student_id = 0;
-        message = f"Quizzical, produced by {student_id} for assessment 1 of CS5003";
-        print(message);
+        welcome_message = f"Quizzical, produced by {student_id} for assessment 1 of CS5003";
+        print(welcome_message);
 
     """
     Ask a question to the user
     """
     def ask_question(self):
-        # Select a random question
-        question = self.questions.get_random_question();
-    
-        # Ask the question
+        # Ask user for a difficulty 
+        requested_difficulty_level = input("Pick a random difficulty (0), or choose the difficulty level of the question you would like to answer (1: easy, 2: medium, 3: hard) ");
+
+        # If difficulty unspecified, ask a random question
+        if requested_difficulty_level == "0":
+            question = self.questions.get_random_question();
+        
+        # If difficulty specified, ask a question of that difficulty
+        elif requested_difficulty_level in ["1", "2", "3"]:
+            question = self.questions.get_filtered_question(["difficulty_level": requested_difficulty_level]);
+
+        # If difficulty is invalid, reask the question
+        else:
+            print("Invalid difficulty level. Must be 0, 1, 2 or 3.");
+            ask_question();
+
+        # Show the question to the user
         print(question.question);
     
         # Display multiple choices
         print(question.choices_string);    
     
-        # Get the user's answer
-        answer = input("Enter your answer: ");
-    
+        # Wait for the user's answer
+        correct = None;
+
+        while True:
+            answer = input("Enter your answer (1,2,3,4) or press 'a' to play a chip. ");
+            
+            try:
+                # If user wants to play a chip
+                if answer == "a":
+                    self.play_chip(question);
+                
+                # Else, attempt to check the answer
+                else:
+                    correct = question.check_answer(answer);
+
+            # If check_answer throws an exception, the answer is invalid
+            except Exception as e:
+                # Tell the user the answer is invalid 
+                print("Invalid answer. Must be 1, 2, 3, 4 or a.");
+                
+                # Ask the user to try again
+                continue;
+            
+            break;
+
         # Check if the answer is correct
-        if question.check_answer(answer):
-            self.user_correct();
+        if correct:
+            self.user_correct(question.difficulty_score);
         else:
-            self.user_incorrect(); 
+            self.user_incorrect(question.correct_answer); 
     
         print("\n");
-    
+
+    """
+    Play a chip
+    @param question: Question object
+    """
+    def play_chip(self, question):
+        chips = ["50/50", "quit"];
+        chip = input(f"Enter the chip you would like to play ({', '.join(chips)}): ");
+
+        # Check if the chip has already been played
+        if chip in self.chips_played:
+            print("You have already played that chip!");
+            return;
+
+        if chip == "50/50":
+
+            # Check if the question can play 50/50
+            if question.can_fifty_fifty():
+
+                # Add the chip to the list of chips played
+                self.chips_played.append("50/50");
+
+                # Play the 50/50 chip
+                question.fifty_fifty();
+
+            else:
+                print("Cannot play 50/50 on this question!");
+
+                # Ask user to play a different chip
+                play_chip(question);
+        
+        elif chip == "quit":
+            return;
+
+        else:
+            print("Invalid chip! ");
+
+            # Ask user to play a different chip
+            play_chip(question);
+
     """
     User answered correctly
+    @param difficulty_score 1-3 score of difficulty, scale defined in question.py
     """
-    def user_correct(self):
+    def user_correct(self, difficulty_score):
         # Increment the number of correct answers
         self.correct_answers += 1;
-    
+        
+        # Increment score
+        self.score += difficulty_score
         # Display a message
-        print(f"Correct! You have answered {self.correct_answers} questions correctly.");
+        print(f"Correct! Your current score is {self.score} (best score: {self.best_score}).");
     
     """
     User answered incorrectly
     """
-    def user_incorrect(self):
+    def user_incorrect(self, correct_answer):
         # Increment the number of incorrect answers
         self.incorrect_answers += 1;
     
         # Display a message
-        print(f"Incorrect! You have answered {self.incorrect_answers} questions incorrectly.");
+        print(f"Incorrect! The correct answer is {correct_answer}. Your current score is {self.score} (best score: {self.best_score}).");
         
         # Check if the game is over
         self.check_game_over();
@@ -95,23 +176,33 @@ class Game:
     def end_game(self,
         offer_restart = True
     ):
-        print(f"You answered {self.correct_answers} questions correctly and {self.incorrect_answers} questions incorrectly.");
         self.game_over = True;
-    
-        # Offer to restart the game if appropriate
-        if offer_restart:
 
-            # Ask user if they want to play again
+        # Display the user's score
+        print(f"Your score was {self.score}.");
+       
+        # Check if the user has a new high score
+        if self.score > self.best_score:
+            # Update the high score
+            self.best_score = self.score;
+
+            # Display a message congratulating the user
+            print(f"Congratulations! You have a new high score.");
+
+        # Offer to reset the game if appropriate
+        if offer_restart:
             user_restart = input("Would you like to play again? (y/n): ");
 
             if user_restart == "y":
-                self.restart_game();
+                self.reset();
 
     """
     Restart the game
     """
-    def restart_game(self):
+    def reset(self):
         # Reset the game
         self.correct_answers = 0;
         self.incorrect_answers = 0;
         self.game_over = False;
+        self.score = 0;
+        self.chips_played = [];

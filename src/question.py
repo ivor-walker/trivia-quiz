@@ -11,8 +11,12 @@ class Question:
     def __init__(self, question):
         self.question = question.get("question");
         self.category = question.get("category");
+       
+        # Get difficulty of question as string and score
         self.difficulty = question.get("difficulty");
-        
+        self.get_difficulty_score(); 
+
+        # Get correct and incorrect answers
         self.correct_answer = question.get("correct_answer");
         self.incorrect_answers = question.get("incorrect_answers");
 
@@ -33,9 +37,27 @@ class Question:
 
             # Shuffle the answers             
             random.shuffle(self.choices);
-
+        
+        # Store number of choices and user-friendly representation of them
         self.num_choices = len(self.choices);
         self.choices_string = self.get_choices_string();
+
+    """
+    Helper method to set the difficulty score of the question
+    """
+    def get_difficulty_score(self):
+        # Turn string representation into a score
+        if self.difficulty == "easy":
+            self.difficulty_score = 1;
+
+        elif self.difficulty == "medium":
+            self.difficulty_score = 2;
+
+        elif self.difficulty == "hard":
+            self.difficulty_score = 3;
+        
+        else:
+            self.difficulty_score = 0;
 
     """
     Get choices as user friendly string
@@ -64,3 +86,26 @@ class Question:
 
         # Look up the answer in the choices list and compare it to the correct answer
         return self.choices[index] == self.correct_answer;
+
+    """
+    50/50: remove two incorrect answers
+    """
+    def fifty_fifty(self):
+        # Shuffle the incorrect answers
+        random.shuffle(self.incorrect_answers);
+
+        # Set the choices to the correct answer and one (now random) incorrect answer
+        self.choices = [self.correct_answer, self.incorrect_answers[0]];
+
+        # Regenerate the choices string
+        self.choices_string = self.get_choices_string();
+        
+        # Update the number of choices
+        self.num_choices = len(self.choices);
+
+    """
+    Check if question can be 50/50'd
+    @return: True if the question can be 50/50'd, False otherwise
+    """
+    def can_fifty_fifty(self):
+        return self.num_choices > 2;
