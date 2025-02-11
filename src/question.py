@@ -52,11 +52,15 @@ class Question:
     """
     Check if the answer is correct
     @param answer: The number of choice to check
-    @return: True if the answer is correct, False otherwise
+    @return: True if the answer is valid and correct, False otherwise
     """
     def check_answer(self, answer):
         # Convert the answer to an index
         index = int(answer) - 1;
         
+        # Check if the index is valid
+        if index < 0 or index >= self.num_choices:
+            return False;
+
         # Look up the answer in the choices list and compare it to the correct answer
         return self.choices[index] == self.correct_answer;
