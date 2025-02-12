@@ -37,9 +37,8 @@ def main(stdscr):
             # If user interrupts again, force the game to end
             except KeyboardInterrupt:
                 game.end_game(offer_restart=False);
-
-    # Reset the screen
-    curses.endwin();
+                curses.endwin();
+                sys.exit(0);
 
 # Run the main function
 wrapper(main);

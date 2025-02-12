@@ -40,12 +40,40 @@ class Game:
         self.stdscr.addstr(0, 0, welcome_message, curses.A_BOLD);
         
         # Ask the user for their name
-        self.stdscr.addstr(1, 0, "Welcome to Quizzical! Please enter your name: ");
+        self.stdscr.addstr(2, 0, "Welcome to Quizzical! Please enter your name: ");
 
         self.stdscr.refresh();
 
         # Get the user's name
         self.user_name = self.stdscr.getstr().decode('utf-8');
+    
+        # Get list of possible bonus categories 
+        self.bonus_categories = questions.get_categories();
+        
+        # Get the user's preferred bonus category
+        self.bonus_category = self.get_bonus_category();
+
+    """
+    Ask the user for their preferred bonus category
+    """
+    def get_bonus_category(self):
+        # Ask the user for their preferred bonus category
+        self.stdscr.addstr(4, 0, "Please select your preferred bonus category {self.bonus_categories}: ");
+        self.stdscr.refresh();
+
+        # Get the user's preferred bonus category
+        bonus_category = self.stdscr.getstr().decode('utf-8');
+
+        # Check if the user has entered a valid bonus category
+        if bonus_category not in self.bonus_categories:
+            # Display an error message
+            self.stdscr.addstr(6, 0, "Invalid bonus category! Please enter a valid bonus category.");
+            self.stdscr.refresh();
+
+            # Ask the user for their preferred bonus category again
+            self.get_bonus_category();
+
+        return bonus_category;
 
     """
     Ask a question to the user, and handle the user's answer
@@ -66,9 +94,9 @@ class Game:
         
         # Check the user's answer
         if question.check_answer(answer):
-            self.user_correct(question.difficulty_score);
+            self.user_correct(question);
         else:
-            self.user_incorrect(question.correct_answer); 
+            self.user_incorrect(question); 
         
         # Stop the timer
         self.stop_timer();
@@ -79,7 +107,7 @@ class Game:
     """
     def get_question(self):
         # Ask user for a difficulty 
-        self.stdscr.addstr(1, 0, "Please enter a difficulty level (0 for random, 1 for easy, 2 for medium, 3 for hard): ", curses.A_BOLD);
+        self.stdscr.addstr(2, 0, "Please enter a difficulty level (0 for random, 1 for easy, 2 for medium, 3 for hard): ", curses.A_BOLD);
         self.stdscr.refresh();
 
         requested_difficulty_level = self.stdscr.getstr().decode('utf-8');
@@ -97,7 +125,7 @@ class Game:
         # If difficulty is invalid, reask the question
         else:
             # Display an error message
-            self.stdscr.addstr(2, 0, "Invalid difficulty level! Please enter a number between 0 and 3.");
+            self.stdscr.addstr(4, 0, "Invalid difficulty level! Please enter a number between 0 and 3.");
             self.stdscr.refresh();
             
             # Ask the user for a difficulty level again
@@ -122,7 +150,7 @@ class Game:
         self.stdscr.addstr(2, 0, question.question);
    
         # Display multiple choices
-        self.stdscr.addstr(3, 0, question.choices_string);
+        self.stdscr.addstr(4, 0, question.choices_string);
 
     """
     Get an answer    
@@ -131,7 +159,7 @@ class Game:
     """
     def get_answer(self, question):
         # Ask the user for an answer
-        self.stdscr.addstr(1, 0, f"Enter your answer {question.valid_answers_string} or press 'a' to play a chip: ", curses.A_BOLD);
+        self.stdscr.addstr(6, 0, f"Enter your answer {question.valid_answers_string} or press 'a' to play a chip: ", curses.A_BOLD);
         self.stdscr.refresh(); 
 
         # Get the user's answer
@@ -149,7 +177,7 @@ class Game:
         if answer not in question.valid_answers:
 
             # Display an error message
-            self.stdscr.addstr(4, 0, "Invalid answer! Please enter a valid answer.");
+            self.stdscr.addstr(8, 0, "Invalid answer! Please enter a valid answer.");
             self.stdscr.refresh();
 
             # Ask the user for an answer again
@@ -183,9 +211,9 @@ class Game:
     """
     def play_chip(self, question):
         # Ask the user for the name of the chip they would like to play
-        stdscr.move(4, 0);
+        stdscr.move(6, 0);
         stdscr.clrtoeol();
-        self.stdscr.addstr(4, 0, "Please enter the name of the chip you would like to play (50/50, quit): ");
+        self.stdscr.addstr(6, 0, "Please enter the name of the chip you would like to play (50/50, quit): ");
         self.stdscr.refresh();
 
         # Get the name of the chip the user would like to play
@@ -253,14 +281,18 @@ class Game:
 
     """
     User answered correctly
-    @param difficulty_score 1-3 score of difficulty, scale defined in question.py
+    @param question: Question object
     """
-    def user_correct(self, difficulty_score):
+    def user_correct(self, question):
         # Increment the number of correct answers
         self.correct_answers += 1;
         
-        # Increment score
-        self.score += difficulty_score
+        # If the user answered a question in their bonus category, double the score 
+        if self.bonus_category == question.category:
+            question.difficulty_score = question.difficulty_score * 2;
+
+        # Increment the user's score
+        self.score += question.difficulty_score
         
         # Wipe the screen
         self.stdscr.clear();
@@ -270,8 +302,9 @@ class Game:
 
     """
     User answered incorrectly
+    @param question: Question object
     """
-    def user_incorrect(self, correct_answer):
+    def user_incorrect(self, question):
         # Increment the number of incorrect answers
         self.incorrect_answers += 1;
      
@@ -279,7 +312,7 @@ class Game:
         self.stdscr.clear();
 
         # Display a message
-        self.stdscr.addstr(0, 0, f"Incorrect! The correct answer was {correct_answer}."); 
+        self.stdscr.addstr(0, 0, f"Incorrect! The correct answer was {question.correct_answer}."); 
 
         # Check if the game is over
         self.check_game_over();
@@ -323,6 +356,8 @@ class Game:
 
             # Display a message congratulating the user
             self.stdscr.addstr(3, 0, f"Congratulations! You have achieved the new high score!", curses.A_BOLD);
+        
+        self.stdscr.refresh();
 
         # Offer to reset the game if appropriate
         if offer_restart:
@@ -332,8 +367,6 @@ class Game:
 
             if user_restart == "y":
                 self.reset();
-        
-        # Exit screen
 
     """
     Restart the game

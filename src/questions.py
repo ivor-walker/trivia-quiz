@@ -138,3 +138,17 @@ class Questions:
        
         # Return a random question from the list of matching questions
         return self.get_random_question(questions);
+
+    """
+    Get a random category
+    @param number: number of categories to return
+    @return: list of categories
+    """
+    def get_categories(self, 
+        number = 4
+    ):
+        # Get all categories
+        categories = list(set([x.category for x in self.questions]));
+
+        # Return a random sample of categories
+        return random.sample(categories, number);
