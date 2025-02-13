@@ -34,6 +34,10 @@ class Game:
         # Get list of questions
         self.questions = Questions();
 
+        # Set maximum time for each question
+        self.default_max_time = 30;
+        self.max_time = self.default_max_time;
+
     """
     Display a welcome message and ask user for info (i.e their name)
     """
@@ -84,7 +88,6 @@ class Game:
     Ask a question to the user, and handle the user's answer
     """
     def ask_question(self):
-                
         # Get a question 
         question = self.get_question();
         
@@ -97,15 +100,14 @@ class Game:
         # Wait for the user's answer
         answer = self.get_answer(question);            
         
+        # Stop the timer
+        self.stop_timer();
+
         # Check the user's answer
         if question.check_answer(answer):
             self.user_correct(question);
         else:
             self.user_incorrect(question); 
-        
-        # Stop the timer
-        self.stop_timer();
-
     
     """  
     Ask the user for a difficulty level and get a question
@@ -151,6 +153,9 @@ class Game:
 
         self.stdscr.addstr(0, 0, self.game_info);
         
+        # Display the timer
+        self.stdscr.addstr(2, 0, f"Time remaining: {self.max_time - self.time_taken} seconds");
+
         # Display the question
         self.stdscr.addstr(5, 0, question.question);
    
@@ -194,13 +199,43 @@ class Game:
     Start the timer
     """
     def start_timer(self):
+        # Start the timer
+        self.timing = True;
+
         # Record current time as start
         self.start_time = time.time();
+        
+        # Measure amount of time taken to answer the question
+        while self.timing:
+            # Record current time
+            current_time = time.time();
+            
+            # Calculate time taken
+            self.time_taken = current_time - self.start_time;
+            
+            # Display remaining time if it is a whole number 
+            if self.time_taken % 1 == 0:
+                self.stdscr.addstr(2, 0, f"Time remaining: {self.max_time - self.time_taken} seconds");
+                self.stdscr.refresh();
+
+            # Check if the user has run out of time
+            if self.time_taken >= self.max_time:
+                # Stop the timer
+                self.stop_timer();
+
+                # Treat as an incorrect answer
+                self.user_incorrect(question);
 
     """
     Stop the timer
     """
     def stop_timer(self):
+        # Stop the timer
+        self.timing = False;
+
+        # Reset maximum time 
+        self.max_time = self.default_max_time;
+
         # Record current time as end
         self.end_time = time.time();
         
@@ -215,8 +250,6 @@ class Game:
     @param question: Question object
     """
     def play_chip(self, question):
-
-        
         # Ask the user for the name of the chip they would like to play
         stdscr.move(3, 0);
         stdscr.clrtoeol();
@@ -268,7 +301,15 @@ class Game:
 
             # Display the question again, with the host's answer
             self.show_question(question);
-        
+       
+        # Stop the clock
+        elif chip == "stop the clock":
+            # Add the chip to the list of chips played
+            self.chips_played.append("stop the clock");
+
+            # Set the maximum time taken to a minute
+            self.max_time = 60;
+
         # Quit the chip menu and return to the question
         elif chip == "quit":
             ();
