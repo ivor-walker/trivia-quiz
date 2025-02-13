@@ -120,3 +120,51 @@ class Question:
     """
     def can_fifty_fifty(self):
         return self.num_choices > 2;
+
+    """
+    ask the host: label an answer as correct
+    """
+    def ask_host(self,
+        easy_chance = 0.9,
+        medium_chance = 0.7,
+        hard_chance = 0.5    
+        ):
+        
+        # Generate a random number between 0 and 1
+        random_number = random.random();
+        
+        # Choose the correct answer with a probability based on the difficulty
+        choose_correct_answer = False;
+
+        if self.difficulty == "easy":
+            choose_correct_answer = random_number < easy_chance;
+        elif self.difficulty == "medium":
+            choose_correct_answer = random_number < medium_chance;
+        elif self.difficulty == "hard":
+            choose_correct_answer = random_number < hard_chance;
+        
+        label_text = " (chosen by the host)";
+        # If the random number is less than the threshold, choose the correct answer
+        if choose_correct_answer:
+            # Tag the correct answer as chosen by the host
+            self.choices = [self.correct_answer + label_text] + [self.incorrect_answers];
+
+            # Shuffle the choices
+            random.shuffle(self.choices);
+
+            # Regenerate the choices string
+            self.choices_string = self.get_choices_string();
+
+        # Else, choose a random incorrect answer
+        else:
+            # Shuffle the incorrect answers
+            random.shuffle(self.incorrect_answers);
+
+            # Tag the first incorrect answer as chosen by the host
+            self.choices = [self.correct_answer] + [self.incorrect_answers[0] + label_text] + [self.incorrect_answers[1:]];
+
+            # Shuffle the choices
+            random.shuffle(self.choices);
+
+            # Regenerate the choices string
+            self.choices_string = self.get_choices_string();
