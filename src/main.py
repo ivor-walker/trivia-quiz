@@ -1,33 +1,17 @@
 from game import Game;
+from view import View;
 
-import curses;
-from curses import wrapper;
-
-# Initialize the screen
-stdscr = curses.initscr();
-
-# Enable echoing of keys
-curses.echo();
-
-# Enable reading of keys without pressing enter
-curses.cbreak();
-
-# Enable keypad mode
-stdscr.keypad(True);
-
-"""
-Main function
-"""
-def main(stdscr):
+try:
     # Start the game
-    game = Game(stdscr);
+    view = View(stdscr);
+    game = Game(view);
     
     # Ask questions until the game is over
     while game.game_over == False:
         try:
-            game.ask_question();
+            game.play_round();
     
-        # Handle keyboard interrupts
+        # Handle keyboard interrupts (i.e the user wants to quit)
         except KeyboardInterrupt:
     
             # Try to end the game normally
@@ -36,9 +20,8 @@ def main(stdscr):
     
             # If user interrupts again, force the game to end
             except KeyboardInterrupt:
-                game.end_game(offer_restart=False);
-                curses.endwin();
-                sys.exit(0);
+                game.end_game(immediate_end = True);
 
-# Run the main function
-wrapper(main);
+finally:
+    # End the game
+    game.end_game(immediate_end = True);
