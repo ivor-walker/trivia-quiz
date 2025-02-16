@@ -62,13 +62,18 @@ class View:
     Ask the user a multiple choice question
     @param question: The question to ask
     @param choices: The choices to display
+    @param info_message: Optional information message to display
     """
     def show_multiple_choice(self, question, choices):
         # Clear the screen
         self.stdscr.clear();
         
+        # Display optional information message
+        if info_message:
+            self.stdscr.addstr(0, 0, info_message);
+
         # Display the question
-        start_line = 1;
+        start_line = 2;
         self.stdscr.addstr(start_line, 0, question, curses.A_BOLD);
 
         # Display the choices 
@@ -97,30 +102,65 @@ class View:
     @param time_left: The time left
     """
     def update_timer(self, time_left):
-        # TODO
-        pass;
+        # Clear the timer line
+        self.stdscr.addstr(1, 0, " " * 100);
+
+        # Display the time left
+        self.stdscr.addstr(1, 0, f"Time left: {time_left}");
+
+        # Refresh the screen
+        self.stdscr.refresh();
+
+        # Wait for the user to press a key
+        self.get_char_input();
 
     """
     Show a message to the user
     @param message: The message to display
     """
     def show_message(self, message):
-        # TODO
-        pass;
+        # Clear the screen
+        self.stdscr.clear();
+
+        # Display the message
+        self.stdscr.addstr(0, 0, message);
+
+        # Tell the user to press any key to continue
+        self.stdscr.addstr(1, 0, "Press any key to continue...");
+
+        # Refresh the screen
+        self.stdscr.refresh();
+        
+        # Wait for the user to press a key
 
     """
     Display the leaderboard
-    @param leaderboard: The leaderboard to display
+    @param leaderboard: List of leaderboard rows
     """
     def display_leaderboard(self, leaderboard):
-        # TODO
-        pass;
-    
+        # Clear the screen
+        self.stdscr.clear();
+
+        # Display the leaderboard
+        self.stdscr.addstr(0, 0, "Leaderboard", curses.A_BOLD);
+        
+        # Tell the user to press any key to continue
+        self.stdscr.addstr(1, 0, "Press any key to continue...");
+
+        # Display the leaderboard rows
+        start_line = 2;
+        for i, row in enumerate(leaderboard):
+            self.stdscr.addstr(i + start_line, 0, row);
+
+        # Refresh the screen
+        self.stdscr.refresh();
+
+        # Wait for the user to press a key
+        self.get_char_input();
+
     """
     End the application
     """
     def exit(self):
         # End the application
         curses.endwin();
-
-

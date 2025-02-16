@@ -242,6 +242,9 @@ class Game:
         
         # Show the question to the user along with the choices
         prompt = f"{question} ({str_valid_answers}): ";
+        
+        # Display the question and choices
+        self.view.show_multiple_choice(prompt, choices, info);
 
         # Get the user's answer
         answer = self.get_input();
@@ -341,7 +344,7 @@ class Game:
         self.score += question.difficulty_score;
        
         # Show the user that they answered correctly
-        self.view.correct_answer("Correct! You have earned {points_scored} points.");
+        self.view.show_message("Correct! You have earned {points_scored} points.");
 
     """
     User answered incorrectly
@@ -353,7 +356,7 @@ class Game:
         
         # Show the user that they answered incorrectly
         message = f"Incorrect! The correct answer was {question.correct_answer}.";
-        self.view.incorrect_answer(message);
+        self.view.show_message(message);
 
         # Check if the game is over
         self.check_game_over();
