@@ -1,4 +1,6 @@
-import random
+from html import unescape;
+
+import random;
 
 """
 Question class used to store information about a single question
@@ -10,19 +12,20 @@ class Question:
     """
     # TODO too long, refactor
     def __init__(self, question):
+        # Store information about the question from the JSON object
         self.question = question.get("question");
         self.category = question.get("category");
-       
-        # Get difficulty of question as string and score
         self.difficulty = question.get("difficulty");
-        self.get_difficulty_score(); 
-
-        # Get correct and incorrect answers
         self.correct_answer = question.get("correct_answer");
         self.incorrect_answers = question.get("incorrect_answers");
-
         self.type = question.get("type");
-      
+        
+        # Unescape all data from JSON
+        self.decode_data();
+
+        # Get difficulty score from difficulty
+        self.get_difficulty_score(); 
+
         # If the question is a boolean question, set the choices to True and False
         if self.type == "boolean":
             self.choices = ["True", "False"];
@@ -33,8 +36,6 @@ class Question:
             # Combine correct and incorrect answers             
             self.choices = self.incorrect_answers;
             self.choices.append(self.correct_answer);
-            
-            self.type = question.get("type");
 
             # Shuffle the answers             
             random.shuffle(self.choices);
@@ -52,6 +53,19 @@ class Question:
         # Set the minimum and maximum answer
         self.min_answer = str(min(self.valid_answers));
         self.max_answer = str(max(self.valid_answers));
+    
+    """
+    Helper method to unescape all data from HTML encoding provided by API
+    """
+    def decode_data(self):
+        for attr, value in self.__dict__.items():
+            # If the attribute is a string, unescape it
+            if isinstance(value, str):
+                setattr(self, attr, unescape(value));
+
+            # If the attribute is a list, unescape all elements
+            elif isinstance(value, list):
+                setattr(self, attr, [unescape(element) for element in value]);
 
     """
     Helper method to set the difficulty score of the question
@@ -84,19 +98,12 @@ class Question:
 
     """
     Check if the answer is correct
-    @param answer: The number of choice to check
+    @param answer: The choice to check
     @return: True if the answer is valid and correct, False otherwise
     """
     def check_answer(self, answer):
-        # Convert the answer to an index
-        index = int(answer) - 1;
-        
-        # Check if the index is valid
-        if index < 0 or index >= self.num_choices:
-            return False;
-
-        # Look up the answer in the choices list and compare it to the correct answer
-        return self.choices[index] == self.correct_answer;
+        # Check if the answer is equal to the correct answer 
+        return answer == self.correct_answer;
 
     """
     50/50: remove two incorrect answers
@@ -124,7 +131,7 @@ class Question:
     """
     ask the host: label an answer as correct
     """
-    def ask_host(self,
+    def ask_the_host(self,
         easy_chance = 0.9,
         medium_chance = 0.7,
         hard_chance = 0.5    

@@ -9,15 +9,15 @@ class View:
     Constructor for the View class
     """
     def __init__(self):
+        # Initialise the screen
+        self.stdscr = curses.initscr();
+
         # Disable echoing of keypresses
         curses.noecho();
 
         # Enable reading of keys instantly
         curses.cbreak();
-
-        # Initialise the screen
-        self.stdscr = curses.initscr();
-
+        
         # Enable keypad mode
         self.stdscr.keypad(True);
 
@@ -64,10 +64,17 @@ class View:
     @param choices: The choices to display
     @param info_message: Optional information message to display
     """
-    def show_multiple_choice(self, question, choices):
+    def show_multiple_choice(self, 
+        question, 
+        choices,
+        info_message = None
+    ):
         # Clear the screen
         self.stdscr.clear();
         
+        # Set the cursor to the top left corner
+        self.stdscr.move(0, 0);
+
         # Display optional information message
         if info_message:
             self.stdscr.addstr(0, 0, info_message);

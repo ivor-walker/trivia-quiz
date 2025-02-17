@@ -1,11 +1,13 @@
 from game import Game;
 from view import View;
 
+import traceback;
+
+# Create the view and game objects
+view = View();
+game = Game(view);
+
 try:
-    # Start the game
-    view = View(stdscr);
-    game = Game(view);
-    
     # Ask questions until the game is over
     while game.game_over == False:
         try:
@@ -22,6 +24,13 @@ try:
             except KeyboardInterrupt:
                 game.end_game(immediate_end = True);
 
+except Exception as e:
+    traceback.print_exc();
+
 finally:
+
     # End the game
     game.end_game(immediate_end = True);
+
+    traceback.print_exc();
+    print("Goodbye!");
