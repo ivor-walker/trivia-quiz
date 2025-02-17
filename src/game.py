@@ -176,17 +176,22 @@ class Game:
         return answer;
 
     """
-    Get a user's input, with an optional maximum time
+    Get a user's input in either line or character mode
     """
-    def get_input(self):
-        # If the user isn't currently being timed, get a simple line input
-        if self.timer.timing == False:
+    def get_input(self,
+        get_char_input = False
+    ):
+        # If user isn't being timed or if requested, get a simple line input
+        if self.timer.timing == False or get_char_input == False:
             return self.view.get_line_input();
         
         user_input = "";
+       
+        # Define while loop condition
+        condition = lambda: get_char_input == True or self.timer.is_expired() == False;
 
-        # While the user has not run out of time
-        while self.timer.is_expired() == False: 
+        # While the user has not pressed enter or not run out of time
+        while condition(): 
             # Update the timer view if necessary
             update_time = self.timer.get_update();
 
@@ -214,6 +219,17 @@ class Game:
 
         # If the user has run out of time, return None
         return None;
+    
+    """
+    Display a message to the user and ask user to press enter to continue
+    """
+    def show_message(self, message):
+        # Show the message to the user
+        enter_prompt = "Press enter to continue...";
+        self.view.show_message(message, enter_prompt);
+
+        # Wait for user to press enter
+        self.get_input(get_char_input = True);
 
     """
     Helper function to get user-friendly string of choices
@@ -347,7 +363,7 @@ class Game:
         self.score += question.difficulty_score;
        
         # Show the user that they answered correctly
-        self.view.show_message("Correct! You have earned {points_scored} points.");
+        self.show_message(f"Correct! You have earned {points_scored} points.");
 
     """
     User answered incorrectly
@@ -359,7 +375,7 @@ class Game:
         
         # Show the user that they answered incorrectly
         message = f"Incorrect! The correct answer was {question.correct_answer}.";
-        self.view.show_message(message);
+        self.show_message(message);
 
         # Check if the game is over
         self.check_game_over();
@@ -410,7 +426,7 @@ class Game:
             self.best_score = self.score;
             
             message = "Congratulations! You have achieved the new high score!";
-            self.view.show_message(self.best_score, message);
+            self.show_message(self.best_score, message);
         
         # Restart the game if the user has chosen to do so
         if restart == "Yes":

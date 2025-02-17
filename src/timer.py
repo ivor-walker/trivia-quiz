@@ -104,6 +104,10 @@ class Timer:
     @return: Time remaining if the time elapsed is a round number, otherwise None
     """
     def get_update(self):
+        # If the timer is not running, return None
+        if self.timing == False:
+            return None;
+
         # If the time elapsed is a round number
         if self.time_elapsed % 1 == 0:
 

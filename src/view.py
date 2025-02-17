@@ -123,8 +123,9 @@ class View:
     """
     Show a message to the user
     @param message: The message to display
+    @param wait_message: Message telling user what to do next
     """
-    def show_message(self, message):
+    def show_message(self, message, wait_message):
         # Clear the screen
         self.stdscr.clear();
 
@@ -132,15 +133,11 @@ class View:
         self.stdscr.addstr(0, 0, message);
 
         # Tell the user to press any key to continue
-        self.stdscr.addstr(2, 0, "Press any key to continue...");
+        self.stdscr.addstr(2, 0, wait_message);
 
         # Refresh the screen
         self.stdscr.refresh();
         
-        # Wait for the user to press a key
-        self.get_char_input();
-        
-        print(message);
     """
     Display the leaderboard
     @param leaderboard: List of leaderboard rows
