@@ -28,7 +28,6 @@ except Exception as e:
     traceback.print_exc();
 
 finally:
-
     # End the game
     game.end_game(immediate_end = True);
 

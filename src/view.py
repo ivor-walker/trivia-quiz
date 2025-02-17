@@ -69,7 +69,6 @@ class View:
         choices,
         info_message = None
     ):
-        # Clear the screen
         self.stdscr.clear();
         
         # Set the cursor to the top left corner
@@ -82,12 +81,14 @@ class View:
         # Display the question
         start_line = 2;
         self.stdscr.addstr(start_line, 0, question, curses.A_BOLD);
+        
+        # Add an extra line gap to contain overflow from the question
+        start_line += 1;
 
         # Display the choices 
         for i, choice in enumerate(choices):
             self.stdscr.addstr(i + start_line + 1, 0, f"{i+1}. {choice}");
 
-        # Refresh the screen
         self.stdscr.refresh();
 
     """
@@ -110,16 +111,14 @@ class View:
     """
     def update_timer(self, time_left):
         # Clear the timer line
-        self.stdscr.addstr(1, 0, " " * 100);
+        self.stdscr.move(1, 0);
+        self.stdscr.clrtoeol();
 
         # Display the time left
         self.stdscr.addstr(1, 0, f"Time left: {time_left}");
 
         # Refresh the screen
         self.stdscr.refresh();
-
-        # Wait for the user to press a key
-        self.get_char_input();
 
     """
     Show a message to the user
@@ -133,13 +132,15 @@ class View:
         self.stdscr.addstr(0, 0, message);
 
         # Tell the user to press any key to continue
-        self.stdscr.addstr(1, 0, "Press any key to continue...");
+        self.stdscr.addstr(2, 0, "Press any key to continue...");
 
         # Refresh the screen
         self.stdscr.refresh();
         
         # Wait for the user to press a key
-
+        self.get_char_input();
+        
+        print(message);
     """
     Display the leaderboard
     @param leaderboard: List of leaderboard rows

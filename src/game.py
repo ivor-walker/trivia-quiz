@@ -166,8 +166,6 @@ class Game:
         if len(self.available_chips) > 0:
             question.choices.append("play a chip");
         
-        print(question.question);
-
         # Show the question to the user and get their answer
         answer = self.ask_multiple_choice(
             question.question, 
@@ -181,7 +179,7 @@ class Game:
     Get a user's input, with an optional maximum time
     """
     def get_input(self):
-        # If the timer has not started, get a simple line input
+        # If the user isn't currently being timed, get a simple line input
         if self.timer.timing == False:
             return self.view.get_line_input();
         
@@ -189,8 +187,7 @@ class Game:
 
         # While the user has not run out of time
         while self.timer.is_expired() == False: 
-
-            # Check if time view needs to be updated
+            # Update the timer view if necessary
             update_time = self.timer.get_update();
 
             if update_time is not None:
