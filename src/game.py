@@ -172,7 +172,7 @@ class Game:
             question.choices, 
             info = self.str_game_info, 
         );
-        
+
         return answer;
 
     """
@@ -182,16 +182,17 @@ class Game:
         get_char_input = False
     ):
         # If user isn't being timed or if requested, get a simple line input
-        if self.timer.timing == False or get_char_input == False:
+        if self.timer.timing == False and get_char_input == False:
             return self.view.get_line_input();
         
         user_input = "";
-       
+        
         # Define while loop condition
         condition = lambda: get_char_input == True or self.timer.is_expired() == False;
-
+            
         # While the user has not pressed enter or not run out of time
         while condition(): 
+
             # Update the timer view if necessary
             update_time = self.timer.get_update();
 
@@ -270,7 +271,7 @@ class Game:
         # Show the question to the user along with the choices
         prompt = f"{question} ({str_valid_answers}): ";
         self.view.show_multiple_choice(prompt, choices, info_message = info);
-
+        
         # Get the user's answer
         answer = self.get_input();
 
@@ -401,7 +402,7 @@ class Game:
         immediate_end = False,
     ):
         self.game_over = True;
-       
+        
         # If the game is ending immediately, exit the game without displaying the user's score or offering to restart
         if immediate_end:
             self.reset(immediate_end = immediate_end);
