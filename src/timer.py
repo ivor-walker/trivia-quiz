@@ -55,6 +55,9 @@ class Timer:
             # Calculate the time elapsed
             self.time_elapsed = round(current_time - self.start_time, decimal_places);
 
+        # Reset start time
+        self.start_time = None;
+
     """
     Stop the timer
     """
@@ -72,22 +75,18 @@ class Timer:
     def reset(self,
         total_time = False
     ):
-        # Create a thread for the timer
         self.thread = None;
 
-        # Reset start and stop times
-        self.start_time = None;
-        self.stop_time = None;
+        # Reset flags
+        self.timer_exceeded = False;
+        self.timing = False;
 
+        
         # Reset time elapsed and total time
         self.time_elapsed = 0;
 
         if total_time:
             self.total_time = 0;
-
-        # Reset flags
-        self.timer_exceeded = False;
-        self.timing = False;
 
         # Reset the max time
         self.max_time = self.default_max_time;
