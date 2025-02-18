@@ -32,9 +32,9 @@ class Game:
         
         # Initialise timer
         self.timer = Timer();
-
+        
     """
-    Restart the game
+    Start the game anew
     """
     def reset(self):
         # Reset the timer
@@ -47,17 +47,17 @@ class Game:
         self.incorrect_answers = 0;
         self.score = 0;
 
-        
         # Available chips 
         self.available_chips = ["50/50", "ask the host", "extra time", "quit"];
         
         # Ask user for information 
         self.user = "";
-        self.bonus_category = "";
-       
         self.user = self.ask_for_user(); 
+
+        # Ask user for bonus category
+        self.bonus_category = "";
         self.bonus_category = self.get_bonus_category();
-    
+        
     """
     Display a welcome message and ask user for info (i.e their name)
     """
@@ -173,47 +173,38 @@ class Game:
         return answer;
 
     """
-    Get a user's input in either line or character mode
+    Get a user's input in character mode, with a timer
     """
-    def get_input(self,
-        get_char_input = False
-    ):
-        # If user isn't being timed or if requested, get a simple line input
-        if self.timer.timing == False and get_char_input == False:
-            return self.view.get_line_input();
+    def get_input(self):
 
         user_input = "";
         
-        # Define while loop condition
-        condition = lambda: get_char_input == True or self.timer.is_expired() == False;
-            
-        # While the user has not pressed enter or not run out of time
-        while condition(): 
-
+        # Continue to get user's input until the timer has expired
+        while self.timer.timing == False or self.timer.is_expired(): 
             # Update the timer view if necessary
             update_time = self.timer.get_update();
-
             if update_time is not None:
                 self.view.update_timer(update_time);
 
             # Get a user's input by character
             char = self.view.get_char_input();
-
+            
             # If user has pressed nothing, continue
             if char is None or char == -1:
                 continue;
 
             # If the user has pressed enter, return the entire input
-            if char == 10: 
+            if char in (10, 13): 
                 return user_input;
 
             # If the user has pressed backspace, remove the last character
-            elif char == 127:
+            elif char in (8, 127):
                 user_input = user_input[:-1];
             
             # If the user presses ctrl+c, exit the game
-            elif char == 3 or char == 26:
-                raise KeyboardInterrupt;
+            elif char in (3, 26):
+                raise KeyboardInterrupt; 
+                return;
 
             # If the user has pressed a valid character, add it to the input
             elif char >= 32 and char <= 126:
@@ -231,7 +222,7 @@ class Game:
         self.view.show_message(message, enter_prompt);
 
         # Wait for user to press enter
-        self.get_input(get_char_input = True);
+        self.get_input();
 
     """
     Helper function to get user-friendly string of choices
@@ -392,7 +383,6 @@ class Game:
         # Display the user's score
         message = f"Game over! Your score was {self.score}. You spent {self.timer.total_time} seconds playing the game. Would you like to play again?";
         choices = ["Yes", "No"];
-        print(message); 
 
         restart = self.ask_multiple_choice(message, choices);
         
@@ -400,36 +390,31 @@ class Game:
         self.leaderboard.add_score(self.user, self.score);
         
         # Display the leaderboard
-        print("Showing leaderboard"); 
         leaderboard = self.leaderboard.get_rows();
         self.view.show_leaderboard(leaderboard);
 
         # Wait for user to press enter
-        self.get_input(get_char_input = True);
+        self.get_input();
 
         # Check if the user has a new high score, and display a message if they do
         if self.score > self.best_score:
             self.best_score = self.score;
             
             message = "Congratulations! You have achieved the new high score!";
-            print(message); 
             self.show_message(message);
         
         # Restart the game if the user has chosen to do so
         if restart == "Yes":
             self.reset();
-        
+
         # Stops the loop in main.py if user chooses not to restart
         else:
-            print("Game over");
             self.game_over = True;
-        # immediate_end() will be called in main.py if the user doesn't choose to restart
    
     """
     Immediately end the game
     """
     def immediate_end(self):
-        print("Immediate end");
         self.view.exit();
         sys.exit(0);
         return;

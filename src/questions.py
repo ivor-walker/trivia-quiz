@@ -7,7 +7,6 @@ from html import unescape
 import random
 
 
-
 """
 Class used to store multiple questions and fetch new ones from the API
 """

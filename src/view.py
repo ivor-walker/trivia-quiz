@@ -14,10 +14,10 @@ class View:
 
         # Disable echoing of keypresses
         curses.noecho();
-
-        # Enable reading of keys instantly
-        curses.cbreak();
         
+        # Disable signal interrupts
+        curses.raw(); 
+
         # Enable keypad mode
         self.stdscr.keypad(True);
 
