@@ -405,7 +405,10 @@ class Game:
         
         # Restart the game if the user has chosen to do so
         if restart == "Yes":
-            self.reset();
+            try:
+                self.reset();
+            except KeyboardInterrupt:
+                self.immediate_end();
 
         # Stops the loop in main.py if user chooses not to restart
         else:

@@ -18,7 +18,14 @@ except KeyboardInterrupt:
 while game.game_over == False:
     try:
         game.play_round();
+
+    # If the user interrupts the game, attempt to end normally
     except KeyboardInterrupt:
-        game.end_game();
+        try:
+            game.end_game();
+
+        # If the user interrupts the game again, end immediately
+        except KeyboardInterrupt:
+            break;
 
 game.immediate_end();

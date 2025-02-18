@@ -64,7 +64,7 @@ class Timer:
     """
     def stop(self):
         # Update the total time
-        self.total_time += self.time_elapsed;
+        self.total_time += int(self.time_elapsed);
 
         # Reset the timer
         self.reset();
