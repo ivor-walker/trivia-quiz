@@ -180,7 +180,7 @@ class Game:
         user_input = "";
         
         # Continue to get user's input until the timer has expired
-        while self.timer.timing == False or self.timer.is_expired(): 
+        while self.timer.timing == False or self.timer.is_expired() == False: 
             # Update the timer view if necessary
             update_time = self.timer.get_update();
             if update_time is not None:
