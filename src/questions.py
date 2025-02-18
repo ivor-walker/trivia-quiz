@@ -22,10 +22,11 @@ class Questions:
         # Set initial token
         self.get_new_token();
 
-        # Fetch initial questions
+        # Initialise list of questions 
         self.questions = [];
-        self.fetch_new_questions();
 
+        # questions = self.fetch_new_questions();
+        # self.add_questions(questions);
         
     """
     Ask for a token from the API 
@@ -58,7 +59,7 @@ class Questions:
         try:
             response = requests.get(f"https://opentdb.com/api.php?amount={n_to_fetch}&token={self.token}");
 
-        # Catch connection errors
+        # Propagate connection errors (caught by main)
         except requests.exceptions.RequestException:
             raise ConnectionError(self.connection_error);
 
@@ -79,12 +80,17 @@ class Questions:
 
         # Code 5: rate limit exceeded
         if response_code == 5:
-            # Wait and try again
+            
+            # Wait out the rate limit
             time.sleep(rate_limit);
+
+            # Try fetching questions again
             return self.fetch_new_questions();
 
         # Other codes: error
         if response_code != 0:
+
+            # Raise error (caught by main)
             raise ConnectionError(f"Error fetching questions from API: error code {response_code}");
 
         # Get questions from response
@@ -93,8 +99,7 @@ class Questions:
         # Construct Question objects from API response
         data = [Question(x) for x in data];
 
-        # Add questions to the list
-        self.add_questions(data);
+        return data;
 
     """
     Add questions to the list
@@ -131,10 +136,12 @@ class Questions:
 
         # Remove from list of questions
         self.delete_question(question);
-
-        # Fetch replacement questions if no questions left
+        
+        # If no questions left, fetch new questions and try again
         if len(self.questions) == 0:
-            self.fetch_new_questions();
+            self.questions = self.fetch_new_questions();
+
+            return self.get_random_question();
 
         return question;
 
@@ -150,7 +157,8 @@ class Questions:
 
         # If no questions match, fetch new questions and try again
         if len(questions) == 0:
-            self.fetch_new_questions();
+            self.questions = self.fetch_new_questions();
+
             return self.get_filtered_question(search_dict);
        
         # Return a random question from the list of matching questions
@@ -166,6 +174,12 @@ class Questions:
     ):
         # Get all categories
         categories = list(set([x.category for x in self.questions]));
+
+        # If not enough categories, fetch new questions and try again
+        if len(categories) < number:
+            self.questions = self.fetch_new_questions();
+
+            return self.get_categories(number = number);
 
         # Return a random sample of categories
         return random.sample(categories, number);

@@ -14,7 +14,7 @@ try:
 
 # If the initial connection to the API fails, end the game immediately
 except ConnectionError as e:
-    print(e);
+    game.show_message(str(e));
     game.immediate_end();
 
 # If the user interrupts the initial setup, end the game immediately
@@ -37,7 +37,7 @@ while not game.game_over:
     
     # If some connection to the API is attempted during the game and fails, end immediately
     except ConnectionError as e:
-        print(e);
+        game.show_message(str(e));
         break;
     
 game.immediate_end();
