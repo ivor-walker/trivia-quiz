@@ -120,12 +120,15 @@ class Timer:
 
     """
     Extend the timer
-    @param extended_max_time: New max time for the timer
+    @param extended_max_time: New max time
     """
     def extend_timer(self,
         extended_max_time = 60
     ):
-        self.max_time = extended_max_time; 
+        self.max_time = extended_max_time;
+
+        # Update start time to reset timer to new max time
+        self.start_time = time.time();
 
     """
     Get remaining time

@@ -3,33 +3,36 @@ from view import View;
 
 import traceback;
 
-# Create the view and game objects
+import signal;
+
+# Initialise view and game objects in global scope
 view = View();
 game = Game(view);
 
+"""
+Handle ctrl+c signal
+"""
+def signal_handler(sig, frame):
+    game.end_game();
+
+# Register signal handler
+signal.signal(signal.SIGINT, signal_handler);
+
 try:
+    game.reset();
+
     # Ask questions until the game is over
     while game.game_over == False:
-        try:
-            game.play_round();
-    
-        # Handle keyboard interrupts (i.e the user wants to quit)
-        except KeyboardInterrupt:
-    
-            # Try to end the game normally
-            try:
-                game.end_game();
-    
-            # If user interrupts again, force the game to end
-            except KeyboardInterrupt:
-                game.end_game(immediate_end = True);
+        game.play_round();
 
+# If user presses ctrl+c, end the game
+except KeyboardInterrupt:
+    game.end_game();
+
+# TODO remove
 except Exception as e:
     traceback.print_exc();
 
+# If the loop stops, force the game to end
 finally:
-    # End the game
-    game.end_game(immediate_end = True);
-
-    traceback.print_exc();
-    print("Goodbye!");
+    game.immediate_end();

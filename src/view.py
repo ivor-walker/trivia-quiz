@@ -104,7 +104,7 @@ class View:
 
         # Refresh the screen
         self.stdscr.refresh();
-    
+
     """
     Update the timer
     @param time_left: The time left
@@ -139,18 +139,17 @@ class View:
         self.stdscr.refresh();
         
     """
-    Display the leaderboard
+    Show the leaderboard
     @param leaderboard: List of leaderboard rows
     """
-    def display_leaderboard(self, leaderboard):
+    def show_leaderboard(self, leaderboard):
         # Clear the screen
         self.stdscr.clear();
 
         # Display the leaderboard
-        self.stdscr.addstr(0, 0, "Leaderboard", curses.A_BOLD);
+        self.stdscr.addstr(0, 0, "Leaderboard");
         
-        # Tell the user to press any key to continue
-        self.stdscr.addstr(1, 0, "Press any key to continue...");
+        self.stdscr.addstr(1, 0, "Press enter to continue...");
 
         # Display the leaderboard rows
         start_line = 2;
@@ -160,12 +159,8 @@ class View:
         # Refresh the screen
         self.stdscr.refresh();
 
-        # Wait for the user to press a key
-        self.get_char_input();
-
     """
-    End the application
+    Exit the curses window
     """
     def exit(self):
-        # End the application
         curses.endwin();

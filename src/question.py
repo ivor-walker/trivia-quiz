@@ -1,5 +1,7 @@
 from html import unescape;
 
+import copy;
+
 import random;
 
 """
@@ -10,7 +12,6 @@ class Question:
     """
     Constructor for the Question class
     """
-    # TODO too long, refactor
     def __init__(self, question):
         # Store information about the question from the JSON object
         self.question = question.get("question");
@@ -26,34 +27,24 @@ class Question:
         # Get difficulty score from difficulty
         self.get_difficulty_score(); 
 
-        # If the question is a boolean question, set the choices to True and False
-        if self.type == "boolean":
-            self.choices = ["True", "False"];
-
-        # Else, set the choices to the correct and incorrect answers 
-        else:
-
-            # Combine correct and incorrect answers             
-            self.choices = self.incorrect_answers;
-            self.choices.append(self.correct_answer);
-
-            # Shuffle the answers             
-            random.shuffle(self.choices);
-        
-        # Store number of choices and user-friendly representation of them
-        self.num_choices = len(self.choices);
-        self.choices_string = self.get_choices_string();
-        
-        # Calculate valid choices (i.e which numbers the user can input)
-        self.valid_answers = [str(i+1) for i in range(self.num_choices)];
-       
-        # Get user friendly representation of the valid answers
-        self.valid_answers_string = ", ".join(self.valid_answers);
-
-        # Set the minimum and maximum answer
-        self.min_answer = str(min(self.valid_answers));
-        self.max_answer = str(max(self.valid_answers));
+        # Combine correct and incorrect answers 
+        self.update_choices();
     
+    """
+    Update the choices list     
+    """
+    def update_choices(self):
+
+        # Combine correct and incorrect answers             
+        # Deep copy to avoid future changes to incorrect_answers affecting choices
+        self.choices = copy.deepcopy(self.incorrect_answers);
+        self.choices.append(self.correct_answer);
+        
+        self.num_choices = len(self.choices);
+
+        # Shuffle the answers             
+        random.shuffle(self.choices);
+
     """
     Helper method to unescape all data from HTML encoding provided by API
     """
@@ -85,18 +76,6 @@ class Question:
             self.difficulty_score = 0;
 
     """
-    Get choices as user friendly string
-    @return: Choices as a string
-    """
-    def get_choices_string(self):
-        # Append the choices to a single string
-        choices_string = "";
-        for i in range(len(self.choices)):
-            choices_string += str(i+1) + ". " + self.choices[i] + "\n";
-
-        return choices_string;
-
-    """
     Check if the answer is correct
     @param answer: The choice to check
     @return: True if the answer is valid and correct, False otherwise
@@ -109,18 +88,11 @@ class Question:
     50/50: remove two incorrect answers
     """
     def fifty_fifty(self):
-        # Shuffle the incorrect answers
-        random.shuffle(self.incorrect_answers);
-
-        # Set the choices to the correct answer and one (now random) incorrect answer
-        self.choices = [self.correct_answer, self.incorrect_answers[0]];
-
-        # Regenerate the choices string
-        self.choices_string = self.get_choices_string();
+        # Select one incorrect answer at random to keep
+        self.incorrect_answers = random.sample(self.incorrect_answers, 1);
         
-        # Update the number of choices
-        self.num_choices = len(self.choices);
-
+        self.update_choices();
+        
     """
     Check if question can be 50/50'd
     @return: True if the question can be 50/50'd, False otherwise
@@ -142,7 +114,7 @@ class Question:
         
         # Choose the correct answer with a probability based on the difficulty
         choose_correct_answer = False;
-
+        
         if self.difficulty == "easy":
             choose_correct_answer = random_number < easy_chance;
         elif self.difficulty == "medium":
@@ -153,25 +125,10 @@ class Question:
         label_text = " (chosen by the host)";
         # If the random number is less than the threshold, choose the correct answer
         if choose_correct_answer:
-            # Tag the correct answer as chosen by the host
-            self.choices = [self.correct_answer + label_text] + [self.incorrect_answers];
+            self.correct_answer += label_text;
 
-            # Shuffle the choices
-            random.shuffle(self.choices);
-
-            # Regenerate the choices string
-            self.choices_string = self.get_choices_string();
-
-        # Else, choose a random incorrect answer
+        # Else, choose an incorrect answer
         else:
-            # Shuffle the incorrect answers
-            random.shuffle(self.incorrect_answers);
-
-            # Tag the first incorrect answer as chosen by the host
-            self.choices = [self.correct_answer] + [self.incorrect_answers[0] + label_text] + [self.incorrect_answers[1:]];
-
-            # Shuffle the choices
-            random.shuffle(self.choices);
-
-            # Regenerate the choices string
-            self.choices_string = self.get_choices_string();
+            self.incorrect_answers[0] += label_text;
+        
+        self.update_choices();

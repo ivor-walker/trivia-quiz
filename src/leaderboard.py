@@ -7,32 +7,37 @@ class Leaderboard:
     Constructor
     """
     def __init__(self):
-        self.scores = [];
+        self.entries = [];
         self.max_size = 10;
 
     """
     Add a score to the leaderboard
     """
-    def add_score(self, score):
-        # Add the score to the list of scores
-        self.scores.append(score);
+    def add_score(self, name, score):
+        # Create a new entry for the score
+        entry = {
+            "name": name,
+            "score": score
+        };
 
-        # Sort scores by score property
-        self.scores.sort(key=lambda x: x.score, reverse=True);
+        # Add the entry to the list of entries
+        self.entries.append(entry);
         
-        # If there are too many scores, remove the lowest score
-        if len(self.scores) > self.max_size:
-            self.scores.pop();
+        # Sort entries dictionary by score
+        self.entries = sorted(self.entries, key=lambda x: x['score'], reverse=True);
+        
+        # If there are too many entries, remove the lowest score
+        if len(self.entries) > self.max_size:
+            self.entries.pop();
 
     """
-    Get a user friendly string representation of the leaderboard
+    Get a user friendly string representation of a single leaderboard entry
     """
-    def __str__(self):
-        # Create a string representation of the leaderboard
-        leaderboard_str = "Leaderboard:\n";
+    def str_entry(self, entry):
+        return f"{entry['name']}: {entry['score']}";
 
-        # Append each score to the string
-        for i in range(len(self.scores)):
-            leaderboard_str += str(i+1) + ". " + str(self.scores[i]) + "\n";
-
-        return leaderboard_str;
+    """
+    Get string representation of the all entries
+    """
+    def get_rows(self):
+        return [self.str_entry(entry) for entry in self.entries];

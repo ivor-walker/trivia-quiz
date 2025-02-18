@@ -5,6 +5,8 @@ from view import View;
 from leaderboard import Leaderboard;
 from timer import Timer;
 
+import copy;
+
 import sys;
 
 """
@@ -31,16 +33,10 @@ class Game:
         # Initialise timer
         self.timer = Timer();
 
-        # Initialise game state
-        self.reset();
-
     """
     Restart the game
-    @param immediate_end: Whether to end the game immediately or prompt the user for info
     """
-    def reset(self,
-        immediate_end = False
-    ):
+    def reset(self):
         # Reset the timer
         self.timer.reset(total_time = True);
 
@@ -58,10 +54,9 @@ class Game:
         # Ask user for information 
         self.user = "";
         self.bonus_category = "";
-        
-        if immediate_end == False:
-            self.user = self.ask_for_user(); 
-            self.bonus_category = self.get_bonus_category();
+       
+        self.user = self.ask_for_user(); 
+        self.bonus_category = self.get_bonus_category();
     
     """
     Display a welcome message and ask user for info (i.e their name)
@@ -103,15 +98,7 @@ class Game:
 
         # Show the question to the user and get their answer
         answer = self.ask_question(question);            
-
-        # Check if user has requested a chip
-        if answer == "play a chip":
-            # Play a chip
-            question = self.play_chip(question);
-
-            # Ask the user for an answer again
-            answer = self.ask_question(question);
-        
+                
         # Stop the timer
         self.timer.stop();
 
@@ -146,7 +133,7 @@ class Game:
             question = self.questions.get_filtered_question({
                 "difficulty": requested_difficulty 
             });
-
+        
         return question;
     
     """
@@ -156,22 +143,32 @@ class Game:
     def ask_question(self,
         question,
     ):
-
         answer = "";
 
         # Get game information 
         self.str_game_info = f"Name: {self.user} | Incorrect answers: {self.incorrect_answers} | Score: {self.score} | High score: {self.best_score}"; 
+        
+        # Deep copy of the question's choices to avoid modifying the original question
+        choices = copy.deepcopy(question.choices);
 
         # Add "play a chip" to the list of choices
-        if len(self.available_chips) > 0:
-            question.choices.append("play a chip");
+        if len(self.available_chips) > 1: 
+            choices.append("play a chip");
         
         # Show the question to the user and get their answer
         answer = self.ask_multiple_choice(
             question.question, 
-            question.choices, 
+            choices,
             info = self.str_game_info, 
         );
+        
+        # Check if user has requested a chip
+        if answer == "play a chip":
+            # Play a chip
+            question = self.play_chip(question);
+
+            # Ask the user for an answer again
+            return self.ask_question(question);
 
         return answer;
 
@@ -184,7 +181,7 @@ class Game:
         # If user isn't being timed or if requested, get a simple line input
         if self.timer.timing == False and get_char_input == False:
             return self.view.get_line_input();
-        
+
         user_input = "";
         
         # Define while loop condition
@@ -213,6 +210,10 @@ class Game:
             # If the user has pressed backspace, remove the last character
             elif char == 127:
                 user_input = user_input[:-1];
+            
+            # If the user presses ctrl+c, exit the game
+            elif char == 3 or char == 26:
+                raise KeyboardInterrupt;
 
             # If the user has pressed a valid character, add it to the input
             elif char >= 32 and char <= 126:
@@ -271,10 +272,10 @@ class Game:
         # Show the question to the user along with the choices
         prompt = f"{question} ({str_valid_answers}): ";
         self.view.show_multiple_choice(prompt, choices, info_message = info);
-        
+
         # Get the user's answer
         answer = self.get_input();
-
+        
         # Check if the user has entered a valid answer (or None has been returned in case of error)
         while answer not in valid_answers and answer is not None:
             # Display an error message
@@ -282,7 +283,7 @@ class Game:
 
             # Ask the user for an answer again
             answer = self.get_input();
-
+            
         
         # Return the user's answer
         if answer is not None:
@@ -301,50 +302,37 @@ class Game:
         prompt = "Please enter the name of the chip you would like to play, or 'quit' to return to the question";
         choices = self.available_chips;
         chip = self.ask_multiple_choice(prompt, choices);
+        
+        # Return to unmodified question 
+        if chip == "quit":
+            return question;
 
-        # Check if the chip has already been played
-        if chip not in self.available_chips:
-            # Display an error message
-            self.view.show_multiple_choice_error("You have already played this chip! Please enter a different chip.");
-
-            # Ask the user to play a different chip
-            self.play_chip(question);
-
+        # Display one correct and one incorrect answer
         if chip == "50/50":
+
             # Check if the question can play 50/50
             if question.can_fifty_fifty():
-                
-                # Remove the chip from the list of available chips
-                self.available_chips.remove("50/50");
-
-                # Play the 50/50 chip
                 question.fifty_fifty();
 
             else:
+                # Ask user to play a different chip
                 self.view.show_multiple_choice_error("You cannot use the 50/50 chip on this question! Please enter a different chip."); 
 
-                # Ask user to play a different chip
-                self.play_chip(question);
+                return self.play_chip(question);
        
         # Choose a weighted random answer as 'selected' by the host 
         elif chip == "ask the host":
-            # Remove the chip from the list of available chips
-            self.available_chips.remove(chip);
-
-            # Play the ask the host chip
             question.ask_the_host();
 
-        # Give the user more time 
+        # Set the maximum time taken to a minute
         elif chip == "extra time":
-            # Remove the chip from the list of available chips 
-            self.available_chips.remove(chip);
+            self.timer.extend_timer();
 
-            # Set the maximum time taken to a minute
-            self.timer.extend();
+        # Remove the played chip from the list of available chips 
+        self.available_chips.remove(chip);
 
-        # Quit the chip menu and return to the question
-        elif chip == "quit":
-            ();
+        # Return question modified by chip
+        return question;
     
     """
     User answered correctly
@@ -396,42 +384,52 @@ class Game:
     
     """
     End the game
-    @param offer_restart: Whether to offer to restart the game  
     """
-    def end_game(self,
-        immediate_end = False,
-    ):
-        self.game_over = True;
-        
-        # If the game is ending immediately, exit the game without displaying the user's score or offering to restart
-        if immediate_end:
-            self.reset(immediate_end = immediate_end);
-            self.view.exit();
-            sys.exit(0);
-            return;
-        
+    def end_game(self):
+        # Stop the timer
+        self.timer.stop();
+
         # Display the user's score
-        message = "Game over! Your score was {self.score}. You spent {self.total_time} seconds playing the game. Would you like to play again?";
+        message = f"Game over! Your score was {self.score}. You spent {self.timer.total_time} seconds playing the game. Would you like to play again?";
         choices = ["Yes", "No"];
+        print(message); 
+
         restart = self.ask_multiple_choice(message, choices);
         
         # Add the user's score to the leaderboard 
         self.leaderboard.add_score(self.user, self.score);
         
         # Display the leaderboard
+        print("Showing leaderboard"); 
         leaderboard = self.leaderboard.get_rows();
-        self.view.show_multiline_message(leaderboard);
+        self.view.show_leaderboard(leaderboard);
+
+        # Wait for user to press enter
+        self.get_input(get_char_input = True);
 
         # Check if the user has a new high score, and display a message if they do
         if self.score > self.best_score:
             self.best_score = self.score;
             
             message = "Congratulations! You have achieved the new high score!";
-            self.show_message(self.best_score, message);
+            print(message); 
+            self.show_message(message);
         
         # Restart the game if the user has chosen to do so
         if restart == "Yes":
             self.reset();
+        
+        # Stops the loop in main.py if user chooses not to restart
         else:
-            self.view.exit();
-    
+            print("Game over");
+            self.game_over = True;
+        # immediate_end() will be called in main.py if the user doesn't choose to restart
+   
+    """
+    Immediately end the game
+    """
+    def immediate_end(self):
+        print("Immediate end");
+        self.view.exit();
+        sys.exit(0);
+        return;
