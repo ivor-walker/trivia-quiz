@@ -6,7 +6,7 @@ Class for the View of the application
 class View:
 
     """
-    Constructor for the View class
+    Constructor and curses initialisation
     """
     def __init__(self):
         # Initialise the screen
@@ -15,11 +15,11 @@ class View:
         # Disable echoing of keypresses
         curses.noecho();
         
-        # Disable signal interrupts
-        curses.raw(); 
-
         # Enable keypad mode
         self.stdscr.keypad(True);
+        
+        # Disable signal interrupts
+        curses.raw(); 
 
         # Make getch non-blocking
         self.stdscr.nodelay(True);

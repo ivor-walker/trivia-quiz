@@ -27,12 +27,16 @@ class Game:
         self.leaderboard = Leaderboard();
         self.best_score = 0; 
 
-        # Get list of questions
-        self.questions = Questions();
-        
+                
         # Initialise timer
         self.timer = Timer();
-        
+    
+    """
+    Initialise questions
+    """
+    def init_questions(self):
+        self.questions = Questions();
+
     """
     Start the game anew
     """

@@ -1,21 +1,28 @@
 from game import Game;
 from view import View;
 
-import traceback;
-
-import signal;
-
 view = View();
 game = Game(view);
 
-# Reset the game
+# Initialise the game
 try:
+    # Connects to API and gets questions
+    game.init_questions();
+
+    # Resets game state and asks for initial info
     game.reset();
+
+# If the initial connection to the API fails, end the game immediately
+except ConnectionError as e:
+    print(e);
+    game.immediate_end();
+
+# If the user interrupts the initial setup, end the game immediately
 except KeyboardInterrupt:
     game.immediate_end();
 
 # Ask questions until the game is over
-while game.game_over == False:
+while not game.game_over:
     try:
         game.play_round();
 
@@ -23,9 +30,14 @@ while game.game_over == False:
     except KeyboardInterrupt:
         try:
             game.end_game();
-
+        
         # If the user interrupts the game again, end immediately
         except KeyboardInterrupt:
             break;
-
+    
+    # If some connection to the API is attempted during the game and fails, end immediately
+    except ConnectionError as e:
+        print(e);
+        break;
+    
 game.immediate_end();

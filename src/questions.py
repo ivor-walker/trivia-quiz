@@ -13,9 +13,12 @@ Class used to store multiple questions and fetch new ones from the API
 class Questions:
 
     """
-    Constructor
+    Constructor: fetch a token and initial questions
     """
     def __init__(self):
+        # Set error messages
+        self.connection_error = "Error fetching questions from API: connection error";
+
         # Set initial token
         self.get_new_token();
 
@@ -23,11 +26,17 @@ class Questions:
         self.questions = [];
         self.fetch_new_questions();
 
+        
     """
     Ask for a token from the API 
     """
     def get_new_token(self):
-        response = requests.get("https://opentdb.com/api_token.php?command=request");
+        try:
+            response = requests.get("https://opentdb.com/api_token.php?command=request");
+        
+        # Catch connection errors
+        except requests.exceptions.RequestException:
+            raise ConnectionError(self.connection_error);
 
         # Parse JSON response
         data = response.json();
@@ -46,7 +55,12 @@ class Questions:
     ):
 
         # Fetch questions from API
-        response = requests.get(f"https://opentdb.com/api.php?amount={n_to_fetch}&token={self.token}");
+        try:
+            response = requests.get(f"https://opentdb.com/api.php?amount={n_to_fetch}&token={self.token}");
+
+        # Catch connection errors
+        except requests.exceptions.RequestException:
+            raise ConnectionError(self.connection_error);
 
         # Parse JSON response
         data = response.json();
@@ -71,7 +85,7 @@ class Questions:
 
         # Other codes: error
         if response_code != 0:
-            raise Exception(f"Error fetching questions from API: error code {response_code}");
+            raise ConnectionError(f"Error fetching questions from API: error code {response_code}");
 
         # Get questions from response
         data = data["results"];
