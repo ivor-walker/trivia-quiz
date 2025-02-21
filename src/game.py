@@ -143,32 +143,24 @@ class Game:
         # Try asking an appropriate question and getting the user's answer 
         try:
             answer = self.ask_question(question);            
-        
+            
+            # Check the user's answer
+            self.timer.stop();
+
+            if question.check_answer(answer):
+                self.correct(question);
+
+            else:
+                self.incorrect(question); 
+
+                # End game if over
+                if self.check_game_over():
+                    self.try_end_game();
+
         # If the user throws a keyboard interrupt, try to end normally 
         except KeyboardInterrupt:
             return self.try_end_game(); 
-
-        # Stop the timer
-        self.timer.stop();
-
-        # Check the user's answer
-        if question.check_answer(answer):
-            self.correct(question);
-        else:
-            self.incorrect(question); 
     
-    """
-    Try to end the game gracefully
-    """
-    def try_end_game(self):
-        # If the user interrupts the game, try to end the game gracefully
-        try:
-            return self.end_game();
-
-        # If the user interrupts the game again, end the game immediately
-        except KeyboardInterrupt:
-            return self.immediate_end();
-
     """  
     Ask the user for a difficulty level     
     @param difficulty_levels: List of difficulty levels
@@ -284,15 +276,30 @@ class Game:
     
     """
     Display a message to the user and ask user to press enter to continue
+    @param message: Message to display
+    @param exception_immediate_end: Whether to end the game immediately if the user interrupts the game
+    @param bubble_exception: Whether to bubble the exception to the parent function
     """
-    def show_message(self, message):
+    def show_message(self, message,
+        exception_immediate_end = False,
+        bubble_exception = False
+    ):
         # Show the message to the user
         enter_prompt = "Press enter to continue...";
         self.view.show_message(message, enter_prompt);
 
         # Wait for user to press enter
-        self.get_input();
+        try:
+            return self.get_input();
+       
+        except KeyboardInterrupt:
+            if bubble_exception:
+                raise KeyboardInterrupt;
 
+            if exception_immediate_end: 
+                return self.immediate_end();
+
+            return self.attempt_end_game();
     """
     Helper function to get user-friendly string of choices
     @param choices: List of choices
@@ -430,7 +437,7 @@ class Game:
         self.score += question.difficulty_score;
        
         # Show the user that they answered correctly
-        self.show_message(f"Correct! You have earned {points_scored} points.");
+        return self.show_message(f"Correct! You have earned {points_scored} points.", bubble_exception = True);
 
     """
     User answered incorrectly
@@ -442,13 +449,11 @@ class Game:
         
         # Show the user that they answered incorrectly
         message = f"Incorrect! The correct answer was {question.correct_answer}.";
-        self.show_message(message);
+        return self.show_message(message, bubble_exception = True);
 
-        # Check if the game is over
-        self.check_game_over();
     
     """
-    Check for and handle game over
+    Check for game over
     @param max_incorrect_answers: Maximum number of incorrect answers before game over
     """
     def check_game_over(self, 
@@ -456,10 +461,20 @@ class Game:
         ):
     
         # Check if user has reached the maximum number of incorrect answers
-        if self.incorrect_answers == max_incorrect_answers:
-            # End the game 
-            self.end_game(); 
+        return self.incorrect_answers == max_incorrect_answers;
     
+    """
+    Try to end the game gracefully
+    """
+    def try_end_game(self):
+        # If the user interrupts the game, try to end the game gracefully
+        try:
+            return self.end_game();
+
+        # If the user interrupts the game again, end the game immediately
+        except KeyboardInterrupt:
+            return self.immediate_end();
+
     """
     End the game
     """
@@ -476,19 +491,14 @@ class Game:
         # Add the user's score to the leaderboard 
         self.leaderboard.add_score(self.user, self.score);
         
-        # Display the leaderboard
-        leaderboard = self.leaderboard.get_rows();
-        self.view.show_leaderboard(leaderboard);
-
-        # Wait for user to press enter
-        self.get_input();
+        self.show_leaderboard();
 
         # Check if the user has a new high score, and display a message if they do
         if self.score > self.best_score:
             self.best_score = self.score;
             
             message = "Congratulations! You have achieved the new high score!";
-            self.show_message(message);
+            self.show_message(message, exception_immediate_end = True);
         
         # Restart the game if the user has chosen to do so
         if restart == "Yes":
@@ -498,7 +508,22 @@ class Game:
         else:
             self.game_over = True;
             return;
-   
+
+    """
+    Show the leaderboard
+    """
+    def show_leaderboard(self):
+        # Display the leaderboard
+        leaderboard = self.leaderboard.get_rows();
+        self.view.show_leaderboard(leaderboard);
+
+        # Wait for user to press enter
+        try:
+            self.get_input();
+
+        except KeyboardInterrupt:
+            return self.immediate_end();
+
     """
     Immediately end the game
     """

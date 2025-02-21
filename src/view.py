@@ -6,7 +6,7 @@ Class for the View of the application
 class View:
 
     """
-    Constructor and curses initialisation
+    Constructor: curses initialisation
     """
     def __init__(self):
         # Initialise the screen
@@ -37,6 +37,7 @@ class View:
 
     """
     Get a line of user's input
+    @return: The line of user's input
     """
     def get_line_input(self):
         return self.stdscr.getstr().decode('utf-8');
@@ -46,7 +47,6 @@ class View:
     @param welcome_message: The welcome message to display
     """
     def show_welcome_form(self, welcome_message, ask_for_name):
-        # Clear the screen
         self.stdscr.clear();
 
         # Display the welcome message
@@ -55,7 +55,6 @@ class View:
         # Ask the user for their name
         self.stdscr.addstr(1, 0, ask_for_name, curses.A_BOLD);
 
-        # Refresh the screen
         self.stdscr.refresh();
 
     """
@@ -96,13 +95,12 @@ class View:
     @param error_message: The error message to display
     """
     def show_multiple_choice_error(self, error_message):
-        # Clear the first line
+        # Clear previous error messages
         self.stdscr.addstr(0, 0, " " * 100);
 
         # Display the error message
         self.stdscr.addstr(0, 0, error_message, curses.A_BOLD);
 
-        # Refresh the screen
         self.stdscr.refresh();
 
     """
@@ -117,7 +115,6 @@ class View:
         # Display the time left
         self.stdscr.addstr(1, 0, f"Time left: {time_left}");
 
-        # Refresh the screen
         self.stdscr.refresh();
 
     """
@@ -126,7 +123,6 @@ class View:
     @param wait_message: Message telling user what to do next
     """
     def show_message(self, message, wait_message):
-        # Clear the screen
         self.stdscr.clear();
 
         # Display the message
@@ -135,7 +131,6 @@ class View:
         # Tell the user to press any key to continue
         self.stdscr.addstr(2, 0, wait_message);
 
-        # Refresh the screen
         self.stdscr.refresh();
         
     """
@@ -143,20 +138,18 @@ class View:
     @param leaderboard: List of leaderboard rows
     """
     def show_leaderboard(self, leaderboard):
-        # Clear the screen
         self.stdscr.clear();
 
-        # Display the leaderboard
+        # Display the leaderboard title
         self.stdscr.addstr(0, 0, "Leaderboard");
         
         self.stdscr.addstr(1, 0, "Press enter to continue...");
 
-        # Display the leaderboard rows
+        # Display leaderboard rows
         start_line = 2;
         for i, row in enumerate(leaderboard):
             self.stdscr.addstr(i + start_line, 0, row);
 
-        # Refresh the screen
         self.stdscr.refresh();
 
     """

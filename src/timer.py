@@ -14,10 +14,8 @@ class Timer:
         # Set defaults
         self.default_max_time = 30;
        
-        # Initialize variables
-        self.reset();
-        
-        self.total_time = 0;
+        # Initialise variables
+        self.reset(total_time = True);
         
     """
     Start the timer
@@ -29,7 +27,7 @@ class Timer:
         
         # Set the start time
         self.start_time = time.time();
-
+   
         # Start the timing loop
         self.timing = True;
         self.thread = threading.Thread(
@@ -46,6 +44,7 @@ class Timer:
         accuracy = 0.01,
         decimal_places = 2
     ):
+
         while self.timing:
             # Avoid CPU overload
             time.sleep(accuracy);
@@ -55,10 +54,11 @@ class Timer:
 
             # Calculate the time elapsed
             self.time_elapsed = round(current_time - self.start_time, decimal_places);
-
+        
         # Reset start time
         self.start_time = None;
-
+        
+        
     """
     Stop the timer
     """
@@ -76,22 +76,18 @@ class Timer:
     def reset(self,
         total_time = False
     ):
-        self.thread = None;
-
-        # Reset flags
-        self.timer_exceeded = False;
+        # Stop the timer loop
         self.timing = False;
-
         
-        # Reset time elapsed and total time
+        # Reset time elapsed
         self.time_elapsed = 0;
-
         if total_time:
             self.total_time = 0;
 
         # Reset the max time
         self.max_time = self.default_max_time;
-    
+        
+        
     """
     Check if the timer has expired
     @return: True if the timer has expired, otherwise False

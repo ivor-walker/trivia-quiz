@@ -2,8 +2,6 @@ from question import Question
 
 import requests
 import time
-from html import unescape
-
 import random
 
 
@@ -99,6 +97,10 @@ class Questions:
 
         # Construct Question objects from API response
         data = [Question(x) for x in data];
+        
+        # If duplicates found, fetch new questions and try again
+        if self.check_duplicates(data):
+            return self.fetch_new_questions();
 
         return data;
 
@@ -122,6 +124,17 @@ class Questions:
     """
     def delete_question(self, question):
         self.questions.remove(question);
+    
+    """
+    Check if there are any duplicate questions
+    @return: boolean
+    """
+    def check_duplicates(self, questions):
+        # Get list of questions
+        question_names = [x.question for x in questions];
+
+        # If there are more questions than unique questions, there are duplicates
+        return len(question_names) != len(set(question_names));
 
     """
     Get a random question   
