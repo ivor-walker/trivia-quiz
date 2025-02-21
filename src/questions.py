@@ -88,8 +88,6 @@ class Questions:
 
         # Other codes: error
         if response_code != 0:
-
-            # Raise error (caught by main)
             raise ConnectionError(f"Error fetching questions from API: error code {response_code}");
 
         # Get questions from response
@@ -127,6 +125,7 @@ class Questions:
     
     """
     Check if there are any duplicate questions
+    @param questions: list of questions to check
     @return: boolean
     """
     def check_duplicates(self, questions):
