@@ -24,9 +24,10 @@ class Questions:
 
         # Initialise list of questions 
         self.questions = [];
-
-        # questions = self.fetch_new_questions();
-        # self.add_questions(questions);
+        
+        # Fetch initial questions
+        questions = self.fetch_new_questions();
+        self.add_questions(questions);
         
     """
     Ask for a token from the API 

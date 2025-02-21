@@ -15,7 +15,7 @@ Class to represent a game
 class Game:
     
     """
-    Constructor
+    Constructor: set view and create a leaderboard and timer
     @param view: View object
     """
     def __init__(self, view):
@@ -27,18 +27,40 @@ class Game:
         self.leaderboard = Leaderboard();
         self.best_score = 0; 
 
-                
         # Initialise timer
         self.timer = Timer();
-    
-    """
-    Initialise questions
-    """
-    def init_questions(self):
-        self.questions = Questions();
+        
+        # Fetch initial questions
+        self.init_questions();
+
+        # Initialise game state and ask user for info
+        self.reset();
 
     """
-    Start the game anew
+    Get and initialise a list of Question objects
+    """
+    def init_questions(self):
+        # Try to get a list of questions
+        try:
+            self.questions = Questions();
+
+        # If there is a network error, display an error message and immediately end the game
+        except ConnectionError as e:
+            return self.handle_error(e);
+
+    """
+    Handle an error
+    @param e: Exception object
+    """
+    def handle_error(self, e):
+        # Display error message and immediately end the game
+        self.show_message(str(e));
+        self.immediate_end();
+
+        return;
+
+    """
+    Reset the game and ask for user info 
     """
     def reset(self):
         # Reset the timer
@@ -54,14 +76,10 @@ class Game:
         # Available chips 
         self.available_chips = ["50/50", "ask the host", "extra time", "quit"];
         
-        # Ask user for information 
-        self.user = "";
+        # Ask for user info
         self.user = self.ask_for_user(); 
-
-        # Ask user for bonus category
-        self.bonus_category = "";
         self.bonus_category = self.get_bonus_category();
-        
+            
     """
     Display a welcome message and ask user for info (i.e their name)
     """
@@ -72,9 +90,14 @@ class Game:
         welcome_message = f"Quizzical, produced by {student_id} for assessment 1 of CS5003";
         ask_for_name = "Welcome to Quizzical! Please enter your name: ";
         self.view.show_welcome_form(welcome_message, ask_for_name);
+        
+        # Try getting the user's name
+        try:
+            return self.get_input();
 
-        # Get the user's name
-        return self.get_input();
+        # If the user interrupts this prompt, immediately end the game
+        except KeyboardInterrupt:
+            return self.immediate_end();
     
     """
     Ask the user for their preferred bonus category
@@ -85,24 +108,46 @@ class Game:
         
         # Ask the user for their preferred bonus category 
         prompt = f"Welcome, {self.user}! Please enter your preferred bonus category";
-        return self.ask_multiple_choice(prompt, bonus_categories); 
+        return self.ask_multiple_choice(prompt, bonus_categories, exception_immediate_end = True); 
+    
+    """
+    Start the game loop
+    """
+    def start(self):
+        # Ask questions until the game is over
+        while not self.game_over:
+            self.play_round();
 
     """
     Play a round of the game
     """
     def play_round(self):
-        # Ask for a difficulty level
-        difficulty_level = self.ask_difficulty();
-
-        # Get a question 
-        question = self.get_question(difficulty_level);
         
-        # Start the timer
-        self.timer.start();
+        # Try asking for a difficulty level
+        try:
+            difficulty_level = self.ask_difficulty();
 
-        # Show the question to the user and get their answer
-        answer = self.ask_question(question);            
-                
+        except KeyboardInterrupt:
+            return self.try_end_game();
+
+        # Try getting a question 
+        try:
+            question = self.get_question(difficulty_level);
+
+        # Handle potential network error as fetching new questions from API could be needed
+        except ConnectionError as e:
+            return self.handle_error(e);
+            
+        self.timer.start();
+        
+        # Try asking an appropriate question and getting the user's answer 
+        try:
+            answer = self.ask_question(question);            
+        
+        # If the user throws a keyboard interrupt, try to end normally 
+        except KeyboardInterrupt:
+            return self.try_end_game(); 
+
         # Stop the timer
         self.timer.stop();
 
@@ -112,6 +157,18 @@ class Game:
         else:
             self.incorrect(question); 
     
+    """
+    Try to end the game gracefully
+    """
+    def try_end_game(self):
+        # If the user interrupts the game, try to end the game gracefully
+        try:
+            return self.end_game();
+
+        # If the user interrupts the game again, end the game immediately
+        except KeyboardInterrupt:
+            return self.immediate_end();
+
     """  
     Ask the user for a difficulty level     
     @param difficulty_levels: List of difficulty levels
@@ -120,8 +177,12 @@ class Game:
         difficulty_levels = ["random", "easy", "medium", "hard"]
     ):
         question = "Please enter a difficulty level";
-        return self.ask_multiple_choice(question, difficulty_levels);
-    
+        return self.ask_multiple_choice(
+            question, difficulty_levels, 
+            # Bubble exception to play_round
+            bubble_exception = True
+        );
+
     """
     Get a question based on requested difficulty
     """
@@ -133,10 +194,12 @@ class Game:
             question = self.questions.get_random_question();
         
         # If difficulty specified, ask a question of that difficulty
-        else: 
-            question = self.questions.get_filtered_question({
-                "difficulty": requested_difficulty 
-            });
+        else:
+            search_dict = {
+                "difficulty": requested_difficulty
+            };
+
+            question = self.questions.get_filtered_question(search_dict);
         
         return question;
     
@@ -164,6 +227,8 @@ class Game:
             question.question, 
             choices,
             info = self.str_game_info, 
+            # Bubble exception to play_round
+            bubble_exception = True
         );
         
         # Check if user has requested a chip
@@ -259,6 +324,8 @@ class Game:
         question, 
         choices,
         info = None,
+        exception_immediate_end = False,
+        bubble_exception = False
     ):
         # Get numbers of valid answers
         str_valid_answers = self.get_choices_string(choices);
@@ -267,9 +334,25 @@ class Game:
         # Show the question to the user along with the choices
         prompt = f"{question} ({str_valid_answers}): ";
         self.view.show_multiple_choice(prompt, choices, info_message = info);
+        
+        # Try getting the user's answer
+        answer = "";
+        try:
+            answer = self.get_input();
+        
+        # If the user interrupts the game, end the game
+        except KeyboardInterrupt:
+            # Let parent function handle the exception
+            if bubble_exception:
+                raise KeyboardInterrupt;
 
-        # Get the user's answer
-        answer = self.get_input();
+            # End the game gracefully
+            if exception_immediate_end:
+                return self.end_game();
+
+            # End the game immediately
+            else:
+                return self.immediate_end();
         
         # Check if the user has entered a valid answer (or None has been returned in case of error)
         while answer not in valid_answers and answer is not None:
@@ -388,7 +471,7 @@ class Game:
         message = f"Game over! Your score was {self.score}. You spent {self.timer.total_time} seconds playing the game. Would you like to play again?";
         choices = ["Yes", "No"];
 
-        restart = self.ask_multiple_choice(message, choices);
+        restart = self.ask_multiple_choice(message, choices, exception_immediate_end = True);
         
         # Add the user's score to the leaderboard 
         self.leaderboard.add_score(self.user, self.score);
@@ -409,19 +492,21 @@ class Game:
         
         # Restart the game if the user has chosen to do so
         if restart == "Yes":
-            try:
-                self.reset();
-            except KeyboardInterrupt:
-                self.immediate_end();
+            return self.reset();
 
         # Stops the loop in main.py if user chooses not to restart
         else:
             self.game_over = True;
+            return;
    
     """
     Immediately end the game
     """
     def immediate_end(self):
+        # Close view
         self.view.exit();
+
+        # Exit application
         sys.exit(0);
+
         return;
