@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2025.1.5)  21 FEB 2025 18:56
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2025.1.5)  21 FEB 2025 20:02
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -474,11 +474,6 @@ Package hyperref Info: Link coloring OFF on input line 14.
 [1
 
 {c:/Users/ivori/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-Overfull \hbox (9.14172pt too wide) in paragraph at lines 61--62
-\OT1/cmr/m/n/12 ask[]multiple[]choice method, which asks the user a ques-tion (via view.show[]multiple[]choice),
- []
-
-
 
 
 pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has been already used, duplicate ignored
@@ -491,13 +486,13 @@ l.64
 
 [3]
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 126.
+(Font)              <12> on input line 124.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 126.
+(Font)              <8> on input line 124.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 126.
+(Font)              <6> on input line 124.
 
-Overfull \hbox (34.41702pt too wide) in paragraph at lines 127--127
+Overfull \hbox (34.41702pt too wide) in paragraph at lines 125--125
 []\OT1/cmr/m/n/12 jclancy, Stack-Over-flow. ``How do i exit vim? ''[On-line]. Avail-able: []$\OT1/cmtt/m/n/12 https : / / stackoverflow .
  []
 
@@ -521,9 +516,9 @@ Here is how much of TeX's memory you used:
  38310 multiletter control sequences out of 15000+600000
  562186 words of font info for 50 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 66i,5n,81p,966b,1327s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 66i,5n,81p,930b,1327s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/Users/ivori/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/Users/ivori/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/Users/ivori/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb><c:/Users/ivori/AppData/Roaming/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
-Output written on report.pdf (5 pages, 66590 bytes).
+Output written on report.pdf (5 pages, 65731 bytes).
 PDF statistics:
  76 PDF objects out of 1000 (max. 8388607)
  60 compressed objects within 1 object stream

@@ -144,9 +144,9 @@ class Game:
         try:
             answer = self.ask_question(question);            
             
+            self.timer.reset();
+            
             # Check the user's answer
-            self.timer.stop();
-
             if question.check_answer(answer):
                 self.correct(question);
 
@@ -299,7 +299,7 @@ class Game:
             if exception_immediate_end: 
                 return self.immediate_end();
 
-            return self.attempt_end_game();
+            return self.try_end_game();
     """
     Helper function to get user-friendly string of choices
     @param choices: List of choices
@@ -353,13 +353,13 @@ class Game:
             if bubble_exception:
                 raise KeyboardInterrupt;
 
-            # End the game gracefully
-            if exception_immediate_end:
-                return self.end_game();
-
             # End the game immediately
-            else:
+            if exception_immediate_end:
                 return self.immediate_end();
+
+            # End the game gracefully
+            else:
+                return self.try_end_game();
         
         # Check if the user has entered a valid answer (or None has been returned in case of error)
         while answer not in valid_answers and answer is not None:
@@ -369,7 +369,6 @@ class Game:
             # Ask the user for an answer again
             answer = self.get_input();
             
-        
         # Return the user's answer
         if answer is not None:
             return choices[int(answer) - 1];
@@ -386,10 +385,11 @@ class Game:
         # Ask the user for the name of the chip they would like to play
         prompt = "Please enter the name of the chip you would like to play, or 'quit' to return to the question";
         choices = self.available_chips;
-        chip = self.ask_multiple_choice(prompt, choices);
         
+        chip = self.ask_multiple_choice(prompt, choices, bubble_exception = True);
+        # If user runs out of time when selecting a chip, return
         # Return to unmodified question 
-        if chip == "quit":
+        if chip == None or chip == "quit":
             return question;
 
         # Display one correct and one incorrect answer
@@ -480,7 +480,7 @@ class Game:
     """
     def end_game(self):
         # Stop the timer
-        self.timer.stop();
+        self.timer.reset();
 
         # Display the user's score
         message = f"Game over! Your score was {self.score}. You spent {self.timer.total_time} seconds playing the game. Would you like to play again?";

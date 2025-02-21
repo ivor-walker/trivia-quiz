@@ -86,7 +86,7 @@ class Questions:
             # Try fetching questions again
             return self.fetch_new_questions();
 
-        # Other codes: error
+        # Other codes that are not zero: error
         if response_code != 0:
             raise ConnectionError(f"Error fetching questions from API: error code {response_code}");
 
