@@ -64,7 +64,7 @@ class Game:
     """
     def reset(self):
         # Reset the timer
-        self.timer.reset(total_time = True);
+        self.timer.reset(reset_total_time = True);
 
         # Reset the game state
         self.game_over = False;

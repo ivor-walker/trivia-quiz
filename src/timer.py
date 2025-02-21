@@ -3,20 +3,45 @@ import time;
 import threading;
 
 """
-Class for a timer that can be started, stopped, and reset
+Timer class for measuring time elapsed
 """
 class Timer:
     
     """
-    Constructor for the Timer class
+    Constructor: initialise variables   
     """
     def __init__(self):
-        # Set defaults
-        self.default_max_time = 30;
-       
-        # Initialise variables
-        self.reset(total_time = True);
+        # Initialise timing flag
+        self.timing = False;
+
+        # Initialise all other variables
+        self.reset(reset_total_time = True);
+    
+    """
+    Set/reset all timer variables
+    @param reset_total_time: Reset the total time as well
+    @param max_time: Time before the timer expires
+    """
+    def reset(self,
+        reset_total_time = False,
+        max_time = 30
+    ):
+        # Reset flags
+        self.timer_stopped = False;
+
+        # Update the total time
+        if reset_total_time:
+            self.total_time = 0;
+        else:
+            self.total_time += self.time_elapsed;
         
+        # Reset start time and time elapsed
+        self.start_time = None;
+        self.time_elapsed = 0;
+
+        # Reset the max time
+        self.max_time = max_time;
+   
     """
     Start the timer
     """
@@ -24,11 +49,8 @@ class Timer:
         # Prevent multiple threads
         if self.timing == True:
             return;
-        
-        # Set the start time
-        self.start_time = time.time();
-   
-        # Start the timing loop
+           
+        # Start the timer loop
         self.timing = True;
         self.thread = threading.Thread(
             target = self.timer_loop,
@@ -38,55 +60,40 @@ class Timer:
         
     """
     Timer loop
-    @param accuracy: Time between each loop iteration
+    @param decimal_places: Number of decimal places to round the time elapsed to
     """
     def timer_loop(self,
-        accuracy = 0.01,
-        decimal_places = 2
+        decimal_places = 0
     ):
+        # To avoid CPU overload, sleep for a short time before checking the time again
+        precision = 10 ** -decimal_places;
+        
+        # Set the start time
+        self.start_time = time.time();
 
         while self.timing:
-            # Avoid CPU overload
-            time.sleep(accuracy);
+            time.sleep(precision);
 
             # Record current time
             current_time = time.time();
 
             # Calculate the time elapsed
             self.time_elapsed = round(current_time - self.start_time, decimal_places);
-        
-        # Reset start time
-        self.start_time = None;
-        
-        
+         
+        self.timer_stopped = True;
+
     """
     Stop the timer
     """
     def stop(self):
-        # Update the total time
-        self.total_time += int(self.time_elapsed);
-
-        # Reset the timer
-        self.reset();
-            
-    """
-    Reset the timer
-    @param total_time: Reset the total time as well
-    """
-    def reset(self,
-        total_time = False
-    ):
         # Stop the timer loop
         self.timing = False;
-        
-        # Reset time elapsed
-        self.time_elapsed = 0;
-        if total_time:
-            self.total_time = 0;
+       
+        # Wait for the timer loop to stop 
+        while self.timer_stopped == False:
+            pass;
 
-        # Reset the max time
-        self.max_time = self.default_max_time;
-        
+        self.reset();
         
     """
     Check if the timer has expired
@@ -94,23 +101,24 @@ class Timer:
     """
     def is_expired(self):
         # Timer expires if time elapsed is greater than the max time
-        return self.time_elapsed > self.max_time;
-    
+        return self.get_remaining_time() <= 0;  
+
     """
     Check if timer view needs to be updated
+    @param update_interval: Interval to update the timer view
     @return: Time remaining if the time elapsed is a round number, otherwise None
     """
-    def get_update(self):
+    def get_update(self,
+        update_interval = 1
+    ):
         # If the timer is not running, return None
         if self.timing == False:
             return None;
-
-        # If the time elapsed is a round number
-        if self.time_elapsed % 1 == 0:
-
-            # Return the time remaining
-            return int(self.max_time - self.time_elapsed);
         
+        # If the time elapsed is at the required interval, return the time remaining
+        if self.time_elapsed % update_interval == 0:
+            return self.get_remaining_time(); 
+
         # Otherwise, return None
         else:
             return None;
@@ -122,10 +130,14 @@ class Timer:
     def extend_timer(self,
         extended_max_time = 60
     ):
-        self.max_time = extended_max_time;
+        # Stop the timer 
+        self.stop();
 
-        # Update start time to reset timer to new max time
-        self.start_time = time.time();
+        # Reset the timer with the new max time
+        self.reset(max_time = extended_max_time);
+
+        # Start the timer again
+        self.start();
 
     """
     Get remaining time
